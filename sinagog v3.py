@@ -21,8 +21,7 @@ html, body, [data-testid="stAppViewContainer"] {
 </style>
 """, unsafe_allow_html=True)
 
-BASE_PATH = r"C:\Users\USER\Desktop\sinagog\sinagog.xlsx"
-EXCEL_FILES_PATH = r"C:\Users\USER\Desktop\sinagog\excels"
+BASE_PATH = r"sinagog.xlsx"
 PURCHASES_PATH = (BASE_PATH, "מכירות")
 DONATIONS_PATH = (BASE_PATH, "תרומות")
 MITZVOT_PATH = (BASE_PATH, "מצוות")
