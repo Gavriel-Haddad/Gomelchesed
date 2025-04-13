@@ -18,7 +18,7 @@ def authenticate():
 
 
         # Create a login widget
-        name, authentication_status, username = authenticator.login(location='main')
+        name, authentication_status, username = authenticator.login(location='main', key='Login')
 
         if authentication_status is False:
             return False;
