@@ -271,10 +271,13 @@ def get_general_report():
 
 
 if "logged_in" not in st.session_state:
-	st.write("hello there")
 	authenticate()
 elif not st.session_state["logged_in"]:
 	st.error("Username/password is incorrect")
+
+
+
+	
 else:
 	actions = ["למלא דוח שבועי", "לתעד תרומה", "להוציא קבלות", "להוציא דוח"]
 	action = st.selectbox("מה תרצה לעשות?", options=actions, index=None, placeholder="בחר אפשרות")#, key=st.session_state["purchase_key"])

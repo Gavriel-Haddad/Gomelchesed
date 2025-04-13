@@ -18,18 +18,11 @@ def authenticate():
 
 
     # Create a login widget
-    auth_res = authenticator.login("Login")
+    name, authentication_status, username = authenticator.login("Login")
 
-    if auth_res:
-        st.write("we are in")
-        name, authentication_status, username = auth_res
-
-        if authentication_status is None:
-            pass
-        elif authentication_status is False:
-            st.session_state["logged_in"] = False
-        else:
-            st.session_state["logged_in"] = True
+    if authentication_status is None:
+        pass
+    elif authentication_status is False:
+        st.session_state["logged_in"] = False
     else:
-        st.write("we are not in")
-        return None
+        st.session_state["logged_in"] = True
