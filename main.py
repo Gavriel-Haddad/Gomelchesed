@@ -270,11 +270,9 @@ def get_general_report():
 
 
 
-auth_stat = authenticate()
-
-if auth_stat is None:
+if "logged_in" not in st.session_state:
 	st.warning("Please enter your username and password")
-elif auth_stat is False:
+elif not st.session_state["logged_in"]:
 	st.error("Username/password is incorrect")
 else:
 	actions = ["למלא דוח שבועי", "לתעד תרומה", "להוציא קבלות", "להוציא דוח"]

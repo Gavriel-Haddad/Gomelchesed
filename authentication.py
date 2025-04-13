@@ -4,40 +4,31 @@ import sys
 import os
 
 def authenticate():
-    try:
-        # Load the credentials from st.secrets
-        credentials = dict(st.secrets["credentials"])
-        cookie = dict(st.secrets["cookie"])
+    # Load the credentials from st.secrets
+    credentials = dict(st.secrets["credentials"])
+    cookie = dict(st.secrets["cookie"])
 
-        # Create an instance of the Authenticate class
-        authenticator = stauth.Authenticate(credentials,         # credentials dict
-            cookie["name"],      # cookie name
-            cookie["key"],       # cookie key
-            cookie["expiry_days"],
-        )
+    # Create an instance of the Authenticate class
+    authenticator = stauth.Authenticate(credentials,         # credentials dict
+        cookie["name"],      # cookie name
+        cookie["key"],       # cookie key
+        cookie["expiry_days"],
+    )
 
 
-        # Create a login widget
-        auth_res = authenticator.login(location='main', key='Login', captcha=True)
-        st.write(auth_res)
-        if auth_res:
-            name, authentication_status, username = auth_res
+    # Create a login widget
+    auth_res = authenticator.login(location='unrendered', key='Login')
 
-            if authentication_status is False:
-                return False;
-            elif authentication_status is None:
-                return None
-            else:
-                return True
+    if auth_res:
+        st.write("we are in")
+        name, authentication_status, username = auth_res
+
+        if authentication_status is None:
+            pass
+        elif authentication_status is False:
+            st.session_state["logged_in"] = False
         else:
-            return None
-        
-    except Exception as e:
-        st.write(str(e))
-        st.write("")
-        st.write("")
-        st.write("")
-        st.write("")
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        st.write(exc_type, fname, exc_tb.tb_lineno)
+            st.session_state["logged_in"] = True
+    else:
+        st.write("we are not in")
+        return None
