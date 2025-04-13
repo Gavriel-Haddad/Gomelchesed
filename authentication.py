@@ -16,6 +16,7 @@ def authenticate():
             cookie["expiry_days"],
         )
 
+
         # Create a login widget
         name, authentication_status, username = authenticator.login("main")
 
@@ -25,14 +26,6 @@ def authenticate():
             return None
         else:
             return True
-            # If we're authenticated, show the protected content
-            st.success(f"Welcome *{name}*!")
-            st.write("You are now logged in. Here is your secure content...")
-
-            # Add a logout button
-            if st.button("Logout"):
-                authenticator.logout("Logout", "main")
-                st.experimental_rerun()
     except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
