@@ -18,7 +18,8 @@ def authenticate():
 
 
         # Create a login widget
-        auth_res = authenticator.login(location='main', key='Login')
+        auth_res = authenticator.login(location='main', key='Login', captcha=True)
+        st.write(auth_res)
         if auth_res:
             name, authentication_status, username = auth_res
 
