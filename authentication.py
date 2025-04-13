@@ -18,7 +18,9 @@ def authenticate():
 
 
         # Create a login widget
+        st.write("hye")
         st.write(help(authenticator.login))
+        st.write("bye")
         name, authentication_status, username = authenticator.login(location='main', key='Login')
 
         if authentication_status is False:
