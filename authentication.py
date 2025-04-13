@@ -9,7 +9,8 @@ def authenticate():
     cookie = dict(st.secrets["cookie"])
 
     # Create an instance of the Authenticate class
-    authenticator = stauth.Authenticate(credentials,         # credentials dict
+    authenticator = stauth.Authenticate(
+        credentials,         # credentials dict
         cookie["name"],      # cookie name
         cookie["key"],       # cookie key
         cookie["expiry_days"],
@@ -17,7 +18,7 @@ def authenticate():
 
 
     # Create a login widget
-    auth_res = authenticator.login(location='main', key='Login')
+    auth_res = authenticator.login()
 
     if auth_res:
         st.write("we are in")
