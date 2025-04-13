@@ -267,9 +267,10 @@ def get_general_report():
 	general_report = pd.DataFrame.from_dict(general_report)
 	return (money_owed, general_report)
 
-try:
-	auth_stat = authenticate()
 
+
+
+auth_stat = authenticate()
 
 if auth_stat is None:
 	st.warning("Please enter your username and password")
