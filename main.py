@@ -1,8 +1,6 @@
 import streamlit as st
 import pandas as pd
 import time
-import sys
-import os
 
 from authentication import authenticate
 from datetime import datetime
@@ -271,10 +269,7 @@ def get_general_report():
 
 try:
 	auth_stat = authenticate()
-except Exception as e:
-	exc_type, exc_obj, exc_tb = sys.exc_info()
-	fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-	st.write(exc_type, fname, exc_tb.tb_lineno)
+
 
 if auth_stat is None:
 	st.warning("Please enter your username and password")
