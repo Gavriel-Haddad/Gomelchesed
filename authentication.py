@@ -10,8 +10,7 @@ def authenticate():
     cookie = st.secrets["cookie"]
 
     # Create an instance of the Authenticate class
-    authenticator = stauth.Authenticate(
-        credentials,         # credentials dict
+    authenticator = stauth.Authenticate(credentials,         # credentials dict
         cookie["name"],      # cookie name
         cookie["key"],       # cookie key
         cookie["expiry_days"],
