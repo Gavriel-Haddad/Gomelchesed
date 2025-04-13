@@ -17,7 +17,7 @@ def authenticate():
 
 
     # Create a login widget
-    auth_res = authenticator.login(location='unrendered', key='Login')
+    auth_res = authenticator.login(location='main', key='Login')
 
     if auth_res:
         st.write("we are in")
