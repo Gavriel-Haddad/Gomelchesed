@@ -19,7 +19,6 @@ def authenticate():
     name, authentication_status, username = authenticator.login("Login")
 
     if authentication_status is None:
-        st.write("this is none")
         pass
     elif authentication_status is False:
         st.session_state["logged_in"] = False
