@@ -1,13 +1,14 @@
 import streamlit as st
 import streamlit_authenticator as stauth
+import copy
 
 def authenticate():
     # Load the credentials from st.secrets
     st.write("hello world")
     st.write(st.secrets.keys())
 
-    credentials = st.secrets["credentials"]
-    cookie = st.secrets["cookie"]
+    credentials = copy.deepcopy(st.secrets["credentials"])
+    cookie = copy.deepcopy(st.secrets["cookie"])
 
     # Create an instance of the Authenticate class
     authenticator = stauth.Authenticate(credentials,         # credentials dict
