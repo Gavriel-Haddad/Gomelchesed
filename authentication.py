@@ -18,20 +18,25 @@ def authenticate():
 
 
         # Create a login widget
-        name, authentication_status, username = authenticator.login(location='main', key='Login')
+        auth_res = authenticator.login(location='main', key='Login')
+        if auth_res:
+            name, authentication_status, username = auth_res
 
-        if authentication_status is False:
-            return False;
-        elif authentication_status is None:
-            return None
+            if authentication_status is False:
+                return False;
+            elif authentication_status is None:
+                return None
+            else:
+                return True
         else:
-            return True
+            return None
+        
     except Exception as e:
         st.write(str(e))
-        st.write()
-        st.write()
-        st.write()
-        st.write()
+        st.write("")
+        st.write("")
+        st.write("")
+        st.write("")
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         st.write(exc_type, fname, exc_tb.tb_lineno)
