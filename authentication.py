@@ -1,7 +1,5 @@
 import streamlit as st
 import streamlit_authenticator as stauth
-import sys
-import os
 
 def authenticate():
     # Load the credentials from st.secrets
