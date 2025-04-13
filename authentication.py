@@ -18,9 +18,6 @@ def authenticate():
 
 
         # Create a login widget
-        st.write("hye")
-        st.write(help(authenticator.login))
-        st.write("bye")
         name, authentication_status, username = authenticator.login(location='main', key='Login')
 
         if authentication_status is False:
@@ -30,6 +27,11 @@ def authenticate():
         else:
             return True
     except Exception as e:
+        st.write(str(e))
+        st.write()
+        st.write()
+        st.write()
+        st.write()
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         st.write(exc_type, fname, exc_tb.tb_lineno)
