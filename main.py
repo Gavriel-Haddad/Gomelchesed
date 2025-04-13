@@ -272,6 +272,7 @@ def get_general_report():
 
 if "logged_in" not in st.session_state:
 	authenticate()
+	st.rerun()
 elif not st.session_state["logged_in"]:
 	st.error("Username/password is incorrect")
 else:
