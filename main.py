@@ -271,9 +271,11 @@ def get_general_report():
 
 
 if "logged_in" not in st.session_state:
+	st.write("hello there")
 	authenticate()
-	st.rerun()
-elif not st.session_state["logged_in"]:
+
+
+if not st.session_state["logged_in"]:
 	st.error("Username/password is incorrect")
 else:
 	actions = ["למלא דוח שבועי", "לתעד תרומה", "להוציא קבלות", "להוציא דוח"]
