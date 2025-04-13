@@ -3,6 +3,9 @@ import streamlit_authenticator as stauth
 
 def authenticate():
     # Load the credentials from st.secrets
+    st.write("hello world")
+    st.write(st.secrets)
+        
     credentials = st.secrets["credentials"]
     cookie = st.secrets["cookie"]
 
