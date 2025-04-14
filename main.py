@@ -221,6 +221,7 @@ def get_general_report():
 
 if "logged_in" not in st.session_state:
 	authenticate()
+	st.rerun()
 else:
 	if "purchase_key" not in st.session_state:
 		st.session_state["purchase_key"] = 0
