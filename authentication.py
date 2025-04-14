@@ -19,9 +19,9 @@ def authenticate():
     name, authentication_status, username = authenticator.login("Login")
 
     st.write(name, authentication_status, username)
-    if authentication_status is None:
+    if st.session_state["authentication_status"] is None:
         pass
-    elif authentication_status is False:
+    elif st.session_state["authentication_status"] is False:
         st.error("Username/password is incorrect")
     else:
         st.session_state["logged_in"] = True
