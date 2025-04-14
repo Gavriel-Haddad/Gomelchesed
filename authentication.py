@@ -24,3 +24,4 @@ def authenticate():
         st.error("Username/password is incorrect")
     else:
         st.session_state["logged_in"] = True
+        return True
