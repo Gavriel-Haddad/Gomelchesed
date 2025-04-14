@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import time
+import data_access_layer as dal
 
 from authentication import authenticate
 from datetime import datetime
@@ -22,16 +23,7 @@ html, body, [data-testid="stAppViewContainer"] {
 </style>
 """, unsafe_allow_html=True)
 
-BASE_PATH = r"sinagog.xlsx"
-PURCHASES_PATH = (BASE_PATH, "מכירות")
-DONATIONS_PATH = (BASE_PATH, "תרומות")
-MITZVOT_PATH = (BASE_PATH, "מצוות")
-PAYMENT_PATH = (BASE_PATH, "אופני תשלום")
 
-PURCHASES = pd.read_excel(PURCHASES_PATH[0], sheet_name=PURCHASES_PATH[1])
-DONATIONS = pd.read_excel(DONATIONS_PATH[0], sheet_name=DONATIONS_PATH[1])
-MITZVOT = pd.read_excel(MITZVOT_PATH[0], sheet_name=MITZVOT_PATH[1])["מצוה"]
-PAYMENT_METHODS = pd.read_excel(PAYMENT_PATH[0],sheet_name=PAYMENT_PATH[1])["אופן תשלום"]
 
 if "purchase_key" not in st.session_state:
 	st.session_state["purchase_key"] = 0
@@ -41,30 +33,11 @@ if "donation_submitted" not in st.session_state:
 	st.session_state["donation_submitted"] = False
 if "reciepts_submitted" not in st.session_state:
 	st.session_state["reciepts_submitted"] = False
+if "db_loaded" not in st.session_state:
+	with st.spinner("אנחנו מכינים הכל... אנא התאזרו בסבלנות"):
+		dal.load_db()
+	st.session_state["db_loaded"] = True
 
-
-
-
-def get_all_people():
-	return sorted(list(set(PURCHASES["שם"].tolist() + DONATIONS["שם"].tolist())))
-
-def get_all_years():
-	return sorted(list(set(PURCHASES["שנה"].tolist())))
-
-def get_last_yesr():
-	if len(get_all_years()) > 0:
-		return get_all_years()[-1]
-	else:
-		return ""
-
-def get_all_days(year: str):
-	return list(set(PURCHASES[PURCHASES["שנה"] == year]["פרשה"].tolist()))
-
-def get_all_donations(reciepted):
-	if reciepted:
-		return DONATIONS[DONATIONS["קבלה"]]
-	else:
-		return DONATIONS[~DONATIONS["קבלה"]]
 
 def display_dataframe(data: pd.DataFrame, editable = False):
 	st.dataframe(data, column_config={
@@ -72,17 +45,11 @@ def display_dataframe(data: pd.DataFrame, editable = False):
 	},
 	hide_index=True)
 
-def update_db():
-	with pd.ExcelWriter(PURCHASES_PATH[0]) as writer:
-		PURCHASES.to_excel(writer, sheet_name=PURCHASES_PATH[1], index=False)
-		DONATIONS.to_excel(writer, sheet_name=DONATIONS_PATH[1], index=False)
-		MITZVOT.to_excel(writer, sheet_name=MITZVOT_PATH[1], index=False)
-		PAYMENT_METHODS.to_excel(writer, sheet_name=PAYMENT_PATH[1], index=False)
 
 
 def handle_reciepts():
-	u_data = get_all_donations(reciepted=False)
-	r_data = get_all_donations(reciepted=True)
+	u_data = dal.get_all_donations(reciepted=False)
+	r_data = dal.get_all_donations(reciepted=True)
 
 	if len(u_data) > 0:
 		u_data["מספר פנקס"] = u_data["מספר פנקס"].astype(str)
@@ -99,30 +66,26 @@ def handle_reciepts():
 		hide_index=True)
 
 		if st.button("שמור"):
-			global DONATIONS
-			DONATIONS = pd.concat([u_data, r_data])
-			update_db()
+			st.session_state["DONATIONS"] = pd.concat([u_data, r_data])
+			dal.mark_donations(st.session_state["DONATIONS"])
 
 			st.session_state["reciepts_submitted"] = True
 	else:
 		st.success("אין על מה להוציא קבלות!!")
 	
 def handle_purchase():
-	global PURCHASES
-	global DONATIONS
-
 	date = st.date_input("תאריך", format="DD.MM.YYYY")
-	year = st.text_input("שנה", value=get_last_yesr())
+	year = st.text_input("שנה", value=dal.get_last_yesr())
 	day = st.text_input("פרשה")
 
-	name = st.selectbox("שם", options=get_all_people() + ["חדש"], index=None, placeholder="בחר מתפלל", key=f"name {st.session_state['purchase_key']}")
+	name = st.selectbox("שם", options=dal.get_all_people() + ["חדש"], index=None, placeholder="בחר מתפלל", key=f"name {st.session_state['purchase_key']}")
 	if name == "חדש":
 		new_name = st.text_input("שם", placeholder="מתפלל חדש", key=f"new_name {st.session_state['purchase_key']}")
 	else:
 		new_name = None  # to keep variable defined
 
 	if name != None:
-		mitsva = st.selectbox("מצוה", options=MITZVOT, index=None, key=f"mitsva {st.session_state['purchase_key']}")
+		mitsva = st.selectbox("מצוה", options=st.session_state["MITZVOT"], index=None, key=f"mitsva {st.session_state['purchase_key']}")
 		amount = st.number_input("סכום", step=1, key=f"amount {st.session_state['purchase_key']}")
 
 		if st.button("שמור"):
@@ -136,19 +99,17 @@ def handle_purchase():
 				"מצוה" : [mitsva],
 			}
 
-			PURCHASES = pd.concat([PURCHASES, pd.DataFrame.from_dict(purchase)])
+			st.session_state["PURCHASES"] = pd.concat([st.session_state["PURCHASES"], pd.DataFrame.from_dict(purchase)])
+			dal.insert_purchase(date, year, day, final_name, amount, mitsva)
 
-			update_db()
+			if name == "חדש":
+				dal.add_new_person(new_name)
 
 			st.session_state["purchase_key"] += 1
 			st.session_state["purchase_submitted"] = True
 
 def handle_donation():
-	global PURCHASES
-	global DONATIONS
-	global PAYMENT_METHODS
-
-	name = st.selectbox("שם", options=get_all_people() + ["חדש"], index=None, placeholder="בחר מתפלל")
+	name = st.selectbox("שם", options=dal.get_all_people() + ["חדש"], index=None, placeholder="בחר מתפלל", key=f"name {st.session_state['purchase_key']}")
 
 	if name == "חדש":
 		new_name = st.text_input("שם", placeholder="מתפלל חדש")
@@ -157,9 +118,9 @@ def handle_donation():
 
 	if name != None:
 		date = st.date_input("תאריך", format="DD.MM.YYYY")
-		year = st.text_input("שנה", value=get_last_yesr())
+		year = st.text_input("שנה", value=dal.get_last_yesr())
 		amount = st.number_input("סכום", step=1)
-		method = st.selectbox("אופן תשלום", options=PAYMENT_METHODS)
+		method = st.selectbox("אופן תשלום", options=st.session_state["PAYMENT_METHODS"])
 		has_reciept = st.checkbox("האם ניתנה קבלה?")
 
 		book = " "
@@ -182,9 +143,9 @@ def handle_donation():
 				"מספר קבלה" : [reciept],
 			}
 
-			DONATIONS = pd.concat([DONATIONS, pd.DataFrame.from_dict(donation)])
 
-			update_db()
+			st.session_state["DONATIONS"] = pd.concat([st.session_state["DONATIONS"], pd.DataFrame.from_dict(donation)])
+			dal.insert_donation(date, year, final_name, amount, method, has_reciept, book, reciept)
 
 			st.session_state["donation_submitted"] = True
 
@@ -192,11 +153,11 @@ def handle_donation():
 
 def get_report_by_person(name: str, year: str = None):
 	if year:
-		yearly_purchases_report = PURCHASES[(PURCHASES["שם"] == name) & (PURCHASES["שנה"] == year)].drop("שם", axis=1)
-		yearly_donations_report = DONATIONS[(DONATIONS["שם"] == name) & (DONATIONS["שנה"] == year)].drop("שם", axis=1)
+		yearly_purchases_report = st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שם"] == name) & (st.session_state["PURCHASES"]["שנה"] == year)].drop("שם", axis=1)
+		yearly_donations_report = st.session_state["DONATIONS"][(st.session_state["DONATIONS"]["שם"] == name) & (st.session_state["DONATIONS"]["שנה"] == year)].drop("שם", axis=1)
 
-		previous_purchases_report = PURCHASES[(PURCHASES["שם"] == name) & (PURCHASES["שנה"] < year)].drop("שם", axis=1)
-		previous_donations_report = DONATIONS[(DONATIONS["שם"] == name) & (DONATIONS["שנה"] < year)].drop("שם", axis=1)
+		previous_purchases_report = st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שם"] == name) & (st.session_state["PURCHASES"]["שנה"] < year)].drop("שם", axis=1)
+		previous_donations_report = st.session_state["DONATIONS"][(st.session_state["DONATIONS"]["שם"] == name) & (st.session_state["DONATIONS"]["שנה"] < year)].drop("שם", axis=1)
 
 
 		yearly_purchases_sum = yearly_purchases_report["סכום"].sum()
@@ -220,8 +181,8 @@ def get_report_by_person(name: str, year: str = None):
 		general_report = pd.DataFrame.from_dict(general_report)
 		return (general_report, yearly_donations_report, yearly_purchases_report)
 	else:
-		purchases_report = PURCHASES[PURCHASES["שם"] == name].drop("שם", axis=1)
-		donations_report = DONATIONS[DONATIONS["שם"] == name].drop("שם", axis=1)
+		purchases_report = st.session_state["PURCHASES"][st.session_state["PURCHASES"]["שם"] == name].drop("שם", axis=1)
+		donations_report = st.session_state["DONATIONS"][st.session_state["DONATIONS"]["שם"] == name].drop("שם", axis=1)
 
 		purchases_sum = purchases_report["סכום"].sum()
 		donations_sum = donations_report["סכום"].sum()
@@ -238,14 +199,14 @@ def get_report_by_person(name: str, year: str = None):
 		return (general_report, donations_report, purchases_report)
 
 def get_report_by_day(year: str, day: str):
-	report = PURCHASES[(PURCHASES["שנה"] == year) & (PURCHASES["פרשה"] == day)]
+	report = st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שנה"] == year) & (st.session_state["PURCHASES"]["פרשה"] == day)]
 	date = datetime.strftime(report["תאריך"].tolist()[0], "%d.%m.%Y")
 	message = f"שבת פרשת {day}, שנת {year}, {date}"
 
 	return (report.drop(["תאריך", "שנה", "פרשה"], axis=1), message, report["סכום"].sum())
 
 def get_general_report():
-	people = get_all_people()
+	people = dal.get_all_people()
 	money_owed = 0
 
 	names, debts = [], []
@@ -309,8 +270,8 @@ if action != None:
 
 
 		if choice == "לפי אדם":
-			name = st.selectbox("על מי תרצה להוציא דוח?", options=get_all_people(), index=None, placeholder="בחר אדם")
-			year = st.selectbox("שנה", options=get_all_years(), index=len(get_all_years())-1, placeholder="בחר שנה")
+			name = st.selectbox("על מי תרצה להוציא דוח?", options=dal.get_all_people(), index=None, placeholder="בחר אדם")
+			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
 			
 			if name != None:
 				general_report, donations_report, purchases_report = get_report_by_person(name, year)
@@ -324,9 +285,9 @@ if action != None:
 				st.write("תרומות")
 				display_dataframe(donations_report)
 		elif choice == "לפי פרשה":
-			year = st.selectbox("שנה", options=get_all_years(), index=None, placeholder="בחר שנה")
+			year = st.selectbox("שנה", options=dal.get_all_years(), index=None, placeholder="בחר שנה")
 			if year != None:
-				day = st.selectbox("על איזה פרשה תרצה להוציא דוח?", options=get_all_days(year), index=None, placeholder="בחר פרשה")
+				day = st.selectbox("על איזה פרשה תרצה להוציא דוח?", options=dal.get_all_days(year), index=None, placeholder="בחר פרשה")
 
 			if year != None and day != None:
 				report, message, total = get_report_by_day(year, day)
@@ -334,7 +295,6 @@ if action != None:
 				st.write(message)
 				st.write(f"סכום כולל: {total:,}")
 				display_dataframe(report)
-
 		elif choice == "כללי":
 			total, general_report = get_general_report()
 
