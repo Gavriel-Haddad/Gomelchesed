@@ -14,8 +14,6 @@ def authenticate():
         cookie["expiry_days"],
     )
 
-    import pip
-    pip.main(["show", "streamlit-authenticator"])
 
     # Create a login widget
     name, authentication_status, username = authenticator.login("Login")
