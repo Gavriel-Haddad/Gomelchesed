@@ -1,5 +1,6 @@
 streamlit
 streamlit-authenticator==0.2.3
+psycopg2
 sqlalchemy
 openpyxl
 pandas
