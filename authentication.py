@@ -21,6 +21,6 @@ def authenticate():
     if authentication_status is None:
         pass
     elif authentication_status is False:
-        st.session_state["logged_in"] = False
+        st.error("Username/password is incorrect")
     else:
         st.session_state["logged_in"] = True

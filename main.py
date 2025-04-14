@@ -25,18 +25,6 @@ html, body, [data-testid="stAppViewContainer"] {
 
 
 
-if "purchase_key" not in st.session_state:
-	st.session_state["purchase_key"] = 0
-if "purchase_submitted" not in st.session_state:
-	st.session_state["purchase_submitted"] = False
-if "donation_submitted" not in st.session_state:
-	st.session_state["donation_submitted"] = False
-if "reciepts_submitted" not in st.session_state:
-	st.session_state["reciepts_submitted"] = False
-if "db_loaded" not in st.session_state:
-	with st.spinner("אנחנו מכינים הכל... אנא התאזרו בסבלנות"):
-		dal.load_db()
-	st.session_state["db_loaded"] = True
 
 
 def display_dataframe(data: pd.DataFrame, editable = False):
@@ -231,84 +219,93 @@ def get_general_report():
 
 
 
-# if "logged_in" not in st.session_state:
-# 	authenticate()
-# 	st.rerun()
-# elif not st.session_state["logged_in"]:
-# 	st.error("Username/password is incorrect")
-# else:
+if "logged_in" not in st.session_state:
+	authenticate()
+else:
+	if "purchase_key" not in st.session_state:
+		st.session_state["purchase_key"] = 0
+	if "purchase_submitted" not in st.session_state:
+		st.session_state["purchase_submitted"] = False
+	if "donation_submitted" not in st.session_state:
+		st.session_state["donation_submitted"] = False
+	if "reciepts_submitted" not in st.session_state:
+		st.session_state["reciepts_submitted"] = False
+	if "db_loaded" not in st.session_state:
+		with st.spinner("אנחנו מכינים הכל... אנא התאזרו בסבלנות"):
+			dal.load_db()
+		st.session_state["db_loaded"] = True
 
 
-actions = ["למלא דוח שבועי", "לתעד תרומה", "להוציא קבלות", "להוציא דוח"]
-action = st.selectbox("מה תרצה לעשות?", options=actions, index=None, placeholder="בחר אפשרות")#, key=st.session_state["purchase_key"])
+	actions = ["למלא דוח שבועי", "לתעד תרומה", "להוציא קבלות", "להוציא דוח"]
+	action = st.selectbox("מה תרצה לעשות?", options=actions, index=None, placeholder="בחר אפשרות")#, key=st.session_state["purchase_key"])
 
-if action != None:
-	if action == "למלא דוח שבועי":
-		handle_purchase()
+	if action != None:
+		if action == "למלא דוח שבועי":
+			handle_purchase()
 
-		if st.session_state["purchase_submitted"]:
-			st.success("הושלם בהצלחה!")
-			time.sleep(0.2)
+			if st.session_state["purchase_submitted"]:
+				st.success("הושלם בהצלחה!")
+				time.sleep(0.2)
 
-			st.session_state["purchase_submitted"] = False
+				st.session_state["purchase_submitted"] = False
 
-			st.rerun()
-	elif action == "לתעד תרומה":
-		handle_donation()
+				st.rerun()
+		elif action == "לתעד תרומה":
+			handle_donation()
 
-		if st.session_state["donation_submitted"]:
-			st.success("הושלם בהצלחה!")
-			time.sleep(0.2)
+			if st.session_state["donation_submitted"]:
+				st.success("הושלם בהצלחה!")
+				time.sleep(0.2)
 
-			st.session_state["purchase_key"] += 1
-			st.session_state["donation_submitted"] = False
+				st.session_state["purchase_key"] += 1
+				st.session_state["donation_submitted"] = False
 
-			st.rerun()
-	elif action == "להוציא דוח":
-		options = ["לפי אדם", "לפי פרשה", "כללי"]
-		choice = st.selectbox("איזה דוח תרצה להוציא?", options=options, index=None, placeholder="בחר דוח")
+				st.rerun()
+		elif action == "להוציא דוח":
+			options = ["לפי אדם", "לפי פרשה", "כללי"]
+			choice = st.selectbox("איזה דוח תרצה להוציא?", options=options, index=None, placeholder="בחר דוח")
 
 
-		if choice == "לפי אדם":
-			name = st.selectbox("על מי תרצה להוציא דוח?", options=dal.get_all_people(), index=None, placeholder="בחר אדם")
-			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
-			
-			if name != None:
-				general_report, donations_report, purchases_report = get_report_by_person(name, year)
-
-				st.write("כללי")
-				display_dataframe(general_report)
-
-				st.write("חובות")
-				display_dataframe(purchases_report)
-
-				st.write("תרומות")
-				display_dataframe(donations_report)
-		elif choice == "לפי פרשה":
-			year = st.selectbox("שנה", options=dal.get_all_years(), index=None, placeholder="בחר שנה")
-			if year != None:
-				day = st.selectbox("על איזה פרשה תרצה להוציא דוח?", options=dal.get_all_days(year), index=None, placeholder="בחר פרשה")
-
-			if year != None and day != None:
-				report, message, total = get_report_by_day(year, day)
+			if choice == "לפי אדם":
+				name = st.selectbox("על מי תרצה להוציא דוח?", options=dal.get_all_people(), index=None, placeholder="בחר אדם")
+				year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
 				
-				st.write(message)
-				st.write(f"סכום כולל: {total:,}")
-				display_dataframe(report)
-		elif choice == "כללי":
-			total, general_report = get_general_report()
+				if name != None:
+					general_report, donations_report, purchases_report = get_report_by_person(name, year)
 
-			st.write(f"כסף בחוץ: {total:,}")
-			display_dataframe(general_report)
-	elif action == "להוציא קבלות":
-		handle_reciepts()
-		
-		if st.session_state["reciepts_submitted"]:
-			st.success("הושלם בהצלחה!")
-			time.sleep(0.2)
+					st.write("כללי")
+					display_dataframe(general_report)
 
-			st.session_state["purchase_key"] += 1
-			st.session_state["reciepts_submitted"] = False
+					st.write("חובות")
+					display_dataframe(purchases_report)
 
-			st.rerun()
+					st.write("תרומות")
+					display_dataframe(donations_report)
+			elif choice == "לפי פרשה":
+				year = st.selectbox("שנה", options=dal.get_all_years(), index=None, placeholder="בחר שנה")
+				if year != None:
+					day = st.selectbox("על איזה פרשה תרצה להוציא דוח?", options=dal.get_all_days(year), index=None, placeholder="בחר פרשה")
+
+				if year != None and day != None:
+					report, message, total = get_report_by_day(year, day)
+					
+					st.write(message)
+					st.write(f"סכום כולל: {total:,}")
+					display_dataframe(report)
+			elif choice == "כללי":
+				total, general_report = get_general_report()
+
+				st.write(f"כסף בחוץ: {total:,}")
+				display_dataframe(general_report)
+		elif action == "להוציא קבלות":
+			handle_reciepts()
+			
+			if st.session_state["reciepts_submitted"]:
+				st.success("הושלם בהצלחה!")
+				time.sleep(0.2)
+
+				st.session_state["purchase_key"] += 1
+				st.session_state["reciepts_submitted"] = False
+
+				st.rerun()
 
