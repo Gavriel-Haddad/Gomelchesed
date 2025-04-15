@@ -59,7 +59,7 @@ def mark_donations(data: pd.DataFrame):
     truncate_query = "TRUBCATE TABLE donations"
 	
     with st.session_state["engine"].begin() as con:
-        con.exexute(sa.text(truncate_query))
+        con.execute(sa.text(truncate_query))
 		
     data.to_sql("donations", if_exists='append')
 
