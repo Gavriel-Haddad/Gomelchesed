@@ -92,6 +92,7 @@ def handle_purchase():
 
 			if name == "חדש":
 				dal.add_new_person(new_name)
+				st.session_state["PEOPLE"].append(new_name)
 
 			st.session_state["purchase_key"] += 1
 			st.session_state["purchase_submitted"] = True
@@ -134,6 +135,10 @@ def handle_donation():
 
 			st.session_state["DONATIONS"] = pd.concat([st.session_state["DONATIONS"], pd.DataFrame.from_dict(donation)])
 			dal.insert_donation(date, year, final_name, amount, method, has_reciept, book, reciept)
+
+			if name == "חדש":
+				dal.add_new_person(new_name)
+				st.session_state["PEOPLE"].append(new_name)
 
 			st.session_state["donation_submitted"] = True
 
@@ -189,7 +194,7 @@ def get_report_by_person(name: str, year: str = None):
 def get_report_by_day(year: str, day: str):
 	report = st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שנה"] == year) & (st.session_state["PURCHASES"]["פרשה"].str.contains(day))]
 	date = datetime.strftime(report["תאריך"].tolist()[0], "%d.%m.%Y")
-	message = f"שבת פרשת {day}, שנת {year}, {date}"
+	message = f"פרשת {day}, {year}, {date}"
 
 	if len(set(report["פרשה"].tolist())) == 1:
 		return (report.drop(["תאריך", "שנה", "פרשה"], axis=1), message, report["סכום"].sum())
