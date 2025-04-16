@@ -290,7 +290,7 @@ if action != None:
 			if year != None:
 				day = st.text_input("על איזה פרשה תרצה להוציא דוח?", placeholder="בחר פרשה")
 
-			if year != None and day != None:
+			if year != None and day != "":
 				report, message, total = get_report_by_day(year, day)
 				
 				st.write(message)
