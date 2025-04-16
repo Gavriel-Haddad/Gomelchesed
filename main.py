@@ -191,7 +191,7 @@ def get_report_by_day(year: str, day: str):
 	date = datetime.strftime(report["תאריך"].tolist()[0], "%d.%m.%Y")
 	message = f"שבת פרשת {day}, שנת {year}, {date}"
 
-	if len(set(report["פרשה"].tolist())) == 1
+	if len(set(report["פרשה"].tolist())) == 1:
 		return (report.drop(["תאריך", "שנה", "פרשה"], axis=1), message, report["סכום"].sum())
 	else:
 		return (report.drop(["תאריך", "שנה"], axis=1), message, report["סכום"].sum())
