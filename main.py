@@ -187,11 +187,14 @@ def get_report_by_person(name: str, year: str = None):
 		return (general_report, donations_report, purchases_report)
 
 def get_report_by_day(year: str, day: str):
-	report = st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שנה"] == year) & (st.session_state["PURCHASES"]["פרשה"] == day)]
+	report = st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שנה"] == year) & (st.session_state["PURCHASES"]["פרשה"].str.contains(day))]
 	date = datetime.strftime(report["תאריך"].tolist()[0], "%d.%m.%Y")
 	message = f"שבת פרשת {day}, שנת {year}, {date}"
 
-	return (report.drop(["תאריך", "שנה", "פרשה"], axis=1), message, report["סכום"].sum())
+	if len(set(report["פרשה"].tolist())) == 1
+		return (report.drop(["תאריך", "שנה", "פרשה"], axis=1), message, report["סכום"].sum())
+	else:
+		return (report.drop(["תאריך", "שנה"], axis=1), message, report["סכום"].sum())
 
 def get_general_report():
 	people = dal.get_all_people()
@@ -285,7 +288,7 @@ if action != None:
 		elif choice == "לפי פרשה":
 			year = st.selectbox("שנה", options=dal.get_all_years(), index=None, placeholder="בחר שנה")
 			if year != None:
-				day = st.selectbox("על איזה פרשה תרצה להוציא דוח?", options=dal.get_all_days(year), index=None, placeholder="בחר פרשה")
+				day = st.text_input("על איזה פרשה תרצה להוציא דוח?", placeholder="בחר פרשה")
 
 			if year != None and day != None:
 				report, message, total = get_report_by_day(year, day)
