@@ -3,7 +3,7 @@ import pandas as pd
 import time
 import data_access_layer as dal
 
-from authentication import authenticate
+# from authentication import authenticate
 from datetime import datetime
 
 st.markdown("""
@@ -13,19 +13,44 @@ html, body, [data-testid="stAppViewContainer"] {
     direction: rtl;
     unicode-bidi: bidi-override;
     text-align: right;
+	font-size: 20px
 }
 
-/* Override RTL for dataframes */
-[data-testid="stDataFrame"] {
-    direction: ltr !important;
-    text-align: left !important;
+# /* Override RTL for dataframes */
+# [data-testid="stDataFrame"] {
+#     direction: ltr !important;
+#     text-align: left !important;
+# }
+			
+/* Apply font size to labels */
+.stTextInput label, .stTextArea label, .stNumberInput label, 
+.stSelectbox label, .stMultiselect label, .stCheckbox label, 
+.stRadio label {
+	font-size: 20px;  /* Adjust this value as needed */
 }
+
+/* Apply font size to dataframes */
+.stDataFrame, .stTable {
+	font-size: 33px;  /* Adjust this value as needed */
+}
+			
+
+.streamlit-expanderHeader, .stTextInput > label, .stTextArea > label, .stNumberInput > label, 
+.stSelectbox > label, .stMultiselect > label, .stCheckbox > label, .stRadio > label {
+	text-decoration: underline;
+	margin-bottom: 6px;
+	display: block;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
 
 
-
+def display_text_in_center(text):
+	st.markdown(f"""
+    		<h1 style="text-align: center; font-size: 15px">{text}</h1>
+		""", unsafe_allow_html=True)
 
 def display_dataframe(data: pd.DataFrame, editable = False):
 	st.dataframe(data, column_config={
@@ -65,15 +90,15 @@ def handle_purchase():
 	date = st.date_input("תאריך", format="DD.MM.YYYY")
 	year = st.text_input("שנה", value=dal.get_last_yesr())
 	day = st.text_input("פרשה")
-
 	name = st.selectbox("שם", options=dal.get_all_people() + ["חדש"], index=None, placeholder="בחר מתפלל", key=f"name {st.session_state['purchase_key']}")
+
 	if name == "חדש":
 		new_name = st.text_input("שם", placeholder="מתפלל חדש", key=f"new_name {st.session_state['purchase_key']}")
 	else:
 		new_name = None  # to keep variable defined
 
 	if name != None:
-		mitsva = st.selectbox("מצוה", options=st.session_state["MITZVOT"], index=None, key=f"mitsva {st.session_state['purchase_key']}")
+		mitsva = st.selectbox("מצוה", options=st.session_state["MITZVOT"], index=None, key=f"mitsva {st.session_state['purchase_key']}", label_visibility='collapsed')
 		amount = st.number_input("סכום", step=1, key=f"amount {st.session_state['purchase_key']}")
 
 		if st.button("שמור"):
@@ -193,13 +218,20 @@ def get_report_by_person(name: str, year: str = None):
 
 def get_report_by_day(year: str, day: str):
 	report = st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שנה"] == year) & (st.session_state["PURCHASES"]["פרשה"].str.contains(day))]
-	date = datetime.strftime(report["תאריך"].tolist()[0], "%d.%m.%Y")
-	message = f"פרשת {day}, {year}, {date}"
+	report = report.sort_values(by=["פרשה", "level"])
 
-	if len(set(report["פרשה"].tolist())) == 1:
-		return (report.drop(["תאריך", "שנה", "פרשה"], axis=1), message, report["סכום"].sum())
+	date = datetime.strftime(report["תאריך"].tolist()[0], "%d.%m.%Y")
+	message = f'פרשת "{day}" {year} - {date}'
+
+	total = report["סכום"].sum()
+	total_row = ["","","", "", 'סה"כ', "", total]
+	report = pd.concat([report, pd.DataFrame([total_row], columns=report.columns[-1::-1])])
+	
+	report = report.drop(["תאריך", "שנה", "level"], axis=1)
+	if len(set(report["פרשה"].tolist()) - set([""])) == 1:
+		return (report.drop(["פרשה"], axis=1), message)
 	else:
-		return (report.drop(["תאריך", "שנה"], axis=1), message, report["סכום"].sum())
+		return (report, message)
 
 def get_general_report():
 	people = dal.get_all_people()
@@ -295,16 +327,16 @@ if action != None:
 			if year != None:
 				day = st.text_input("על איזה פרשה תרצה להוציא דוח?", placeholder="בחר פרשה")
 
-			if year != None and day != "" and st.button("הוצא דוח"):
-				report, message, total = get_report_by_day(year, day)
-				
-				st.write(message)
-				st.write(f"סכום כולל: {total:,}")
-				display_dataframe(report)
+			if st.button("הוצא דוח"):
+				if year != None and day != "":
+					report, message= get_report_by_day(year, day)
+					
+					display_text_in_center(message)
+					display_dataframe(report)
 		elif choice == "כללי":
 			total, general_report = get_general_report()
 
-			st.write(f"כסף בחוץ: {total:,}")
+			display_text_in_center(f"כסף בחוץ: {total:,}")
 			display_dataframe(general_report)
 	elif action == "להוציא קבלות":
 		handle_reciepts()

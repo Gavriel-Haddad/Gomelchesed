@@ -4,15 +4,20 @@ import pandas as pd
 
 
 def load_db():
-    st.session_state["engine"] = sa.create_engine(st.secrets["postgres"]["db_url"])
-    # st.session_state["engine"] = sa.create_engine(r"postgresql://Gomelchesed_owner:npg_Bz0SUtTPgkv1@ep-spring-river-a20x0ye0-pooler.eu-central-1.aws.neon.tech/Gomelchesed?sslmode=require")
+    # st.session_state["engine"] = sa.create_engine(st.secrets["postgres"]["db_url"])
+    st.session_state["engine"] = sa.create_engine(r"postgresql://Gomelchesed_owner:npg_Bz0SUtTPgkv1@ep-spring-river-a20x0ye0-pooler.eu-central-1.aws.neon.tech/Gomelchesed?sslmode=require")
     engine = st.session_state["engine"]
 
+    st.session_state["MITZVOT"] = pd.read_sql(sa.text("select מצוה from mitsvot order by level"), engine.connect())["מצוה"].tolist()
     st.session_state["PEOPLE"] = pd.read_sql("people", engine.connect())["שם"].tolist()
-    st.session_state["PURCHASES"] = pd.read_sql("purchases", engine.connect())
-    st.session_state["DONATIONS"] = pd.read_sql("donations", engine.connect())
-    st.session_state["MITZVOT"] = pd.read_sql("mitsvot", engine.connect())["מצוה"].tolist()
     st.session_state["PAYMENT_METHODS"] = pd.read_sql("payment_methods", engine.connect())["אופן תשלום"].tolist()
+
+    st.session_state["DONATIONS"] = pd.read_sql("donations", engine.connect())
+    st.session_state["PURCHASES"] = pd.read_sql(sa.text("""
+                                            select p.*, m.level 
+                                            from purchases p
+                                            join mitsvot m on p."מצוה" = m."מצוה"
+                                    """), engine.connect())
 
 def get_all_people():
 	return sorted(st.session_state["PEOPLE"])
