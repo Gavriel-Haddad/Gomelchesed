@@ -45,6 +45,10 @@ html, body, [data-testid="stAppViewContainer"] {
 </style>
 """, unsafe_allow_html=True)
 
+if "css_injected" not in st.session_state:
+    st.session_state.css_injected = True
+    time.sleep(1)
+    st.rerun()
 
 
 def display_text_in_center(text):
@@ -57,8 +61,6 @@ def display_dataframe(data: pd.DataFrame, editable = False):
 		"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
 	},
 	hide_index=True)
-
-
 
 def handle_reciepts():
 	u_data = dal.get_all_donations(reciepted=False)
@@ -323,7 +325,7 @@ if action != None:
 				st.write("תרומות")
 				display_dataframe(donations_report)
 		elif choice == "לפי פרשה":
-			year = st.selectbox("שנה", options=dal.get_all_years(), index=None, placeholder="בחר שנה")
+			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
 			if year != None:
 				day = st.text_input("על איזה פרשה תרצה להוציא דוח?", placeholder="בחר פרשה")
 
