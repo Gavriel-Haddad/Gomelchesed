@@ -458,7 +458,7 @@ if action != None:
 
 				cols = st.columns([0.5,1,0.5,1,0.5])
 				year = str(year).replace('"', '')
-				cols[1].download_button("📥 Download as Excel", data=excel_file, file_name=f"{name} - {year}", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+				cols[1].download_button("📥 Download as Excel", data=excel_file, file_name=f"{name} - {year}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 				cols[3].download_button("📄 Download as PDF", data=pdf_file, file_name=f"{name} - {year}.pdf", mime="application/pdf")
 		elif choice == "לפי פרשה":
 			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
