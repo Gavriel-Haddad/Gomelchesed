@@ -8,3 +8,4 @@ bcrypt
 reportlab
 arabic-reshaper
 python-bidi
+xlsxwriter
