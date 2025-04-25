@@ -1,7 +1,18 @@
 import streamlit as st
 import pandas as pd
 import time
+import io
+import os
 import data_access_layer as dal
+
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+import arabic_reshaper
+from bidi.algorithm import get_display
 
 # from authentication import authenticate
 from datetime import datetime
@@ -61,6 +72,116 @@ def display_dataframe(data: pd.DataFrame):
 		"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
 	},
 	hide_index=True)
+
+
+def to_excel_with_titles(dfs, titles):
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        workbook = writer.book
+        worksheet = workbook.add_worksheet("Sheet1")
+        writer.sheets["Sheet1"] = worksheet
+
+        # Define a title format
+        title_format = workbook.add_format({
+            'bold': True,
+            'font_size': 14,
+            'align': 'center',
+            'valign': 'vcenter',
+            'font_color': 'white',
+            'bg_color': '#4F81BD'
+        })
+
+        row = 0
+        for df, title in zip(dfs, titles):
+            # Merge cells for title (span width of df)
+            col_count = len(df.columns)
+            worksheet.merge_range(row, 0, row, col_count - 1, title, title_format)
+            row += 2  # leave space under title
+
+            df.to_excel(writer, sheet_name="Sheet1", startrow=row, index=False, header=True)
+            row += len(df) + 3  # leave space under the table for the next title
+
+    output.seek(0)
+    return output
+
+def to_pdf_reportlab(dfs, titles):
+	def reshape_hebrew(text):
+		reshaped = arabic_reshaper.reshape(text)
+		return get_display(reshaped)
+
+	# Register a Hebrew-supporting font
+	font_path = os.path.join(os.path.dirname(__file__), "fonts", "DejaVuSans.ttf")
+	pdfmetrics.registerFont(TTFont("DejaVu", font_path))
+
+	# Custom style for Hebrew
+	styles = getSampleStyleSheet()
+	hebrew_style = ParagraphStyle(
+		name='Hebrew',
+		parent=styles['Normal'],
+		fontName='DejaVu',
+		fontSize=12,
+		leading=14,
+		rightIndent=0,
+		alignment=2,  # right-align
+	)
+
+	buffer = io.BytesIO()
+	doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=18)
+
+	elements = []
+	styles = getSampleStyleSheet()
+
+	for df, title in zip(dfs, titles):
+        # Section title
+		elements.append(Paragraph(title, styles['Heading2']))
+		elements.append(Spacer(1, 12))
+
+        # Convert DataFrame to list of lists
+		data = [df.columns.tolist()] + df.values.tolist()
+
+        # Create table
+		table = Table(data)
+		table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#d3d3d3")),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ]))
+		elements.append(table)
+		elements.append(Spacer(1, 24))  # space between tables
+
+	buffer = io.BytesIO()
+	doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=18)
+	elements = []
+
+	for df, title in zip(dfs, titles):
+		elements.append(Paragraph(reshape_hebrew(title), hebrew_style))
+		elements.append(Spacer(1, 12))
+
+        # Prepare reshaped data
+		data = [[reshape_hebrew(str(col)) for col in df.columns]]
+		for _, row in df.iterrows():
+			reshaped_row = [reshape_hebrew(str(cell)) for cell in row]
+			data.append(reshaped_row)
+
+		table = Table(data)
+		table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#d3d3d3")),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'DejaVu'),
+            ('FONTSIZE', (0, 0), (-1, -1), 11),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ]))
+		elements.append(table)
+		elements.append(Spacer(1, 24))
+
+	doc.build(elements)
+	buffer.seek(0)
+	return buffer
+
 
 def handle_reciepts():
 	u_data = dal.get_all_donations(reciepted=False)
@@ -318,7 +439,9 @@ if action != None:
 			if name != None:
 				general_report, donations_report, purchases_report = get_report_by_person(name, year)
 
-				st.write("כללי")
+
+
+				st.write("סיכום")
 				display_dataframe(general_report)
 
 				st.write("חובות")
@@ -326,6 +449,18 @@ if action != None:
 
 				st.write("תרומות")
 				display_dataframe(donations_report)
+
+
+				# Download buttons
+				reports = [general_report, purchases_report, donations_report]
+				titles = ["סיכום", "חובות", "תרומות"]
+
+				excel_file = to_excel_with_titles(reports, titles)
+				pdf_file = to_pdf_reportlab(reports, titles)
+
+				cols = st.columns([0.5,1,0.5,1,0.5])
+				cols[1].download_button("📥 Download as Excel", data=excel_file, file_name="combined.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+				cols[3].download_button("📄 Download as PDF", data=pdf_file, file_name="combined.pdf", mime="application/pdf")
 		elif choice == "לפי פרשה":
 			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
 			if year != None:
@@ -412,4 +547,14 @@ if action != None:
 
 				time.sleep(0.2)
 				st.rerun()
+
+
+
+
+
+
+
+
+
+
 

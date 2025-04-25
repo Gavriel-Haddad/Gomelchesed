@@ -5,3 +5,6 @@ sqlalchemy
 openpyxl
 pandas
 bcrypt
+reportlab
+arabic-reshaper
+python-bidi
