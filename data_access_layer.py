@@ -73,3 +73,20 @@ def add_new_person(name: str):
 	
     with st.session_state["engine"].begin() as con:
         con.execute(sa.text(query))    
+
+def update_person_data(name: str, year, new_purchases: pd.DataFrame, new_donations: pd.DataFrame):
+    query = f"""
+            delete from purchases
+            where "שם" = '{name}'
+            and "שנה" = '{year}';
+
+            delete from donations
+            where "שם" = '{name}'
+            and "שנה" = '{year}';
+        """
+    
+    with st.session_state["engine"].begin() as con:
+        con.execute(sa.text(query))
+    
+    new_purchases.to_sql("purchases", st.session_state["engine"].connect(), if_exists='append', index=False)
+    new_donations.to_sql("donations", st.session_state["engine"].connect(), if_exists='append', index=False)
