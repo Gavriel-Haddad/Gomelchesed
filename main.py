@@ -68,7 +68,7 @@ def display_text_in_center(text):
 		""", unsafe_allow_html=True)
 
 def display_dataframe(data: pd.DataFrame):
-	st.dataframe(data, width=1100, column_config={
+	st.dataframe(data, column_config={
 		"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
 	},
 	hide_index=True)
@@ -81,7 +81,10 @@ def to_excel_with_titles(dfs, titles):
         worksheet = workbook.add_worksheet("Sheet1")
         writer.sheets["Sheet1"] = worksheet
 
-        # Define a title format
+        # Set worksheet RTL
+        worksheet.right_to_left()
+
+        # Title style (RTL)
         title_format = workbook.add_format({
             'bold': True,
             'font_size': 14,
@@ -91,15 +94,27 @@ def to_excel_with_titles(dfs, titles):
             'bg_color': '#4F81BD'
         })
 
+        # Column header format (RTL aligned)
+        header_format = workbook.add_format({
+            'align': 'right',
+            'bold': True
+        })
+
         row = 0
         for df, title in zip(dfs, titles):
-            # Merge cells for title (span width of df)
             col_count = len(df.columns)
-            worksheet.merge_range(row, 0, row, col_count - 1, title, title_format)
-            row += 2  # leave space under title
 
-            df.to_excel(writer, sheet_name="Sheet1", startrow=row, index=False, header=True)
-            row += len(df) + 3  # leave space under the table for the next title
+            # Merge title
+            worksheet.merge_range(row, 0, row, col_count - 1, title, title_format)
+            row += 2
+
+            # Write table data
+            df.to_excel(writer, sheet_name="Sheet1", startrow=row + 1, index=False, header=False)
+
+            # Write column headers manually with right alignment
+            for col_idx, col_name in enumerate(df.columns):
+                worksheet.write(row, col_idx, col_name, header_format)
+            row += len(df) + 4
 
     output.seek(0)
     return output
@@ -259,7 +274,7 @@ def handle_donation():
 		amount = st.number_input("סכום", step=1)
 		method = st.selectbox("אופן תשלום", options=st.session_state["PAYMENT_METHODS"])
 		has_reciept = st.checkbox("האם ניתנה קבלה?")
-
+		
 		book = " "
 		reciept = " "
 
@@ -281,8 +296,11 @@ def handle_donation():
 			}
 
 
-			st.session_state["DONATIONS"] = pd.concat([st.session_state["DONATIONS"], pd.DataFrame.from_dict(donation)])
+			donation = pd.DataFrame.from_dict(donation)
+			donation["תאריך"] = donation["תאריך"].astype("datetime64[ns]")
+			
 			dal.insert_donation(date, year, final_name, amount, method, has_reciept, book, reciept)
+			st.session_state["DONATIONS"] = pd.concat([st.session_state["DONATIONS"], pd.DataFrame.from_dict(donation)])
 
 			if name == "חדש":
 				dal.add_new_person(new_name)
@@ -315,9 +333,14 @@ def get_report_by_person(name: str, year: str = None):
 			'יתרה משנה קודמת': [previous_total],
 			'תרומות שנה נוכחית': [yearly_donations_sum],
 			'חובות שנה נוכחית': [yearly_purchases_sum],
-			'סך הכל שנה נוכחית': [previous_total],
 			'סך הכל': [total_sum],
 		}
+
+		previous_year_row = {"סכום": previous_total, "מצוה" : "", "פרשה": "", "שנה": f"יתרה משנה קודמת", "תאריך": [None]}
+		previous_year_row = pd.DataFrame.from_dict(previous_year_row)
+		sum_row = {"סכום": previous_total + yearly_purchases_sum, "מצוה" : "", "פרשה": "", "שנה": f'סה"כ', "תאריך": [None]}
+		sum_row = pd.DataFrame(sum_row)
+		yearly_purchases_report = pd.concat([previous_year_row, yearly_purchases_report, sum_row], ignore_index=True)
 
 		general_report = pd.DataFrame.from_dict(general_report)
 		return (general_report, yearly_donations_report, yearly_purchases_report.drop(["level"], axis=1))
@@ -362,7 +385,7 @@ def get_general_report():
 
 	names, debts = [], []
 	for person in people:
-		report, _, _ = get_report_by_person(person)
+		report, _, _ = get_report_by_person(person, dal.get_last_yesr())
 		
 		balance = float(report["סך הכל"].tolist()[0])
 
@@ -493,7 +516,8 @@ if action != None:
 		
 		if name != None:
 			_, donations_report, purchases_report = get_report_by_person(name, year)
-			
+			purchases_report.reset_index(inplace=True, drop=True)
+			purchases_report.drop([0, len(purchases_report) - 1], axis=0, inplace=True)
 
 			st.write("חובות")
 			purchases_report.insert(0, "?האם למחוק", False)
@@ -523,6 +547,8 @@ if action != None:
 				donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
 
 				with st.spinner("שומר..."):
+					dal.update_person_data(name, year, edited_purchases_report, edited_donations_report)
+
 					all_data = pd.DataFrame(st.session_state["PURCHASES"]).reset_index(drop=True)
 					person_data_before_edit = purchases_report
 					person_data_before_edit.insert(1, "שם", name)
@@ -539,8 +565,6 @@ if action != None:
 					all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True)
 					st.session_state["DONATIONS"] = pd.concat([all_data_without_person, edited_donations_report])
 					
-					dal.update_person_data(name, year, edited_purchases_report, edited_donations_report)
-
 				st.success("נשמר בהצלחה")
 				st.session_state["fix_key"] += 1
 
