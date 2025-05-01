@@ -40,10 +40,10 @@ html, body, [data-testid="stAppViewContainer"] {
 	font-size: 25px;  /* Adjust this value as needed */
 }
 
-/* Apply font size to dataframes */
-.stDataFrame, .stTable {
-	font-size: 20px;  /* Adjust this value as needed */
-}
+# /* Apply font size to dataframes */
+# .stDataFrame, .stTable {
+# 	font-size: 20px;  /* Adjust this value as needed */
+# }
 			
 
 .streamlit-expanderHeader, .stTextInput > label, .stTextArea > label, .stNumberInput > label, 
@@ -68,7 +68,7 @@ def display_text_in_center(text):
 		""", unsafe_allow_html=True)
 
 def display_dataframe(data: pd.DataFrame):
-	st.dataframe(data, width=1000, column_config={
+	st.dataframe(data, column_config={
 		"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
 	},
 	hide_index=True)
