@@ -26,12 +26,6 @@ html, body, [data-testid="stAppViewContainer"] {
     text-align: right;
 	font-size: 25px
 }
-
-/* Override RTL for dataframes */
-[data-testid="stDataFrame"] {
-    direction: ltr !important;
-    text-align: left !important;
-}
 			
 /* Apply font size to labels */
 .stTextInput label, .stTextArea label, .stNumberInput label, 
@@ -45,7 +39,6 @@ html, body, [data-testid="stAppViewContainer"] {
 	font-size: 15px;  /* Adjust this value as needed */
 }
 			
-
 .streamlit-expanderHeader, .stTextInput > label, .stTextArea > label, .stNumberInput > label, 
 .stSelectbox > label, .stMultiselect > label, .stCheckbox > label, .stRadio > label {
 	text-decoration: underline;
@@ -68,7 +61,7 @@ def display_text_in_center(text):
 		""", unsafe_allow_html=True)
 
 def display_dataframe(data: pd.DataFrame):
-	st.dataframe(data, column_config={
+	st.dataframe(data, width=1100, column_config={
 		"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
 	},
 	hide_index=True)
