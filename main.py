@@ -40,10 +40,12 @@ html, body, [data-testid="stAppViewContainer"] {
 	font-size: 25px;  /* Adjust this value as needed */
 }
 
-# /* Apply font size to dataframes */
-# .stDataFrame, .stTable {
-# 	font-size: 20px;  /* Adjust this value as needed */
-# }
+# comment
+			
+/* Apply font size to dataframes */
+.stDataFrame, .stTable {
+	font-size: 15px;  /* Adjust this value as needed */
+}
 			
 
 .streamlit-expanderHeader, .stTextInput > label, .stTextArea > label, .stNumberInput > label, 
