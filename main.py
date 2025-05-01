@@ -313,7 +313,6 @@ def get_report_by_person(name: str, year: str = None):
 		previous_purchases_report = st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שם"] == name) & (st.session_state["PURCHASES"]["שנה"] < year)].drop("שם", axis=1)
 		previous_donations_report = st.session_state["DONATIONS"][(st.session_state["DONATIONS"]["שם"] == name) & (st.session_state["DONATIONS"]["שנה"] < year)].drop("שם", axis=1)
 
-
 		yearly_purchases_sum = yearly_purchases_report["סכום"].sum()
 		yearly_donations_sum = yearly_donations_report["סכום"].sum()
 		previous_purchases_sum = previous_purchases_report["סכום"].sum()
@@ -331,31 +330,31 @@ def get_report_by_person(name: str, year: str = None):
 			'סך הכל': [total_sum],
 		}
 
-		previous_year_row = {"סכום": previous_total, "מצוה" : "", "פרשה": "", "שנה": f"יתרה משנה קודמת", "תאריך": [None]}
+		previous_year_row = {"סכום": previous_total, "מצוה" : "", "פרשה": f"יתרה משנה קודמת", "שנה": "", "תאריך": [None]}
 		previous_year_row = pd.DataFrame.from_dict(previous_year_row)
 		sum_row = {"סכום": previous_total + yearly_purchases_sum, "מצוה" : "", "פרשה": "", "שנה": f'סה"כ', "תאריך": [None]}
 		sum_row = pd.DataFrame(sum_row)
 		yearly_purchases_report = pd.concat([previous_year_row, yearly_purchases_report, sum_row], ignore_index=True)
 
 		general_report = pd.DataFrame.from_dict(general_report)
-		return (general_report, yearly_donations_report, yearly_purchases_report.drop(["level"], axis=1))
-	else:
-		purchases_report = st.session_state["PURCHASES"][st.session_state["PURCHASES"]["שם"] == name].drop("שם", axis=1)
-		donations_report = st.session_state["DONATIONS"][st.session_state["DONATIONS"]["שם"] == name].drop("שם", axis=1)
+		return (general_report, yearly_donations_report, yearly_purchases_report.drop(["level", "שנה"], axis=1))
+	# else:
+	# 	purchases_report = st.session_state["PURCHASES"][st.session_state["PURCHASES"]["שם"] == name].drop("שם", axis=1)
+	# 	donations_report = st.session_state["DONATIONS"][st.session_state["DONATIONS"]["שם"] == name].drop("שם", axis=1)
 
-		purchases_sum = purchases_report["סכום"].sum()
-		donations_sum = donations_report["סכום"].sum()
+	# 	purchases_sum = purchases_report["סכום"].sum()
+	# 	donations_sum = donations_report["סכום"].sum()
 		
-		total = donations_sum - purchases_sum
+	# 	total = donations_sum - purchases_sum
 
-		general_report = {
-			'תרומות': [donations_sum],
-			'חובות': [purchases_sum],
-			'סך הכל': [total],
-		}
+	# 	general_report = {
+	# 		'תרומות': [donations_sum],
+	# 		'חובות': [purchases_sum],
+	# 		'סך הכל': [total],
+	# 	}
 
-		general_report = pd.DataFrame.from_dict(general_report)
-		return (general_report, donations_report, purchases_report)
+	# 	general_report = pd.DataFrame.from_dict(general_report)
+	# 	return (general_report, donations_report, purchases_report)
 
 def get_report_by_day(year: str, day: str):
 	report = st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שנה"] == year) & (st.session_state["PURCHASES"]["פרשה"].str.contains(day))]
@@ -487,12 +486,12 @@ if action != None:
 				if year != None and day != "":
 					report, message= get_report_by_day(year, day)
 					
-					display_text_in_center(message)
+					st.write(message)
 					display_dataframe(report)
 		elif choice == "כללי":
 			total, general_report = get_general_report()
 
-			display_text_in_center(f"כסף בחוץ: {total:,}")
+			st.write(f"כסף בחוץ: {total:,}")
 			display_dataframe(general_report)
 	elif action == "להוציא קבלות":
 		handle_reciepts()
