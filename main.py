@@ -27,11 +27,11 @@ html, body, [data-testid="stAppViewContainer"] {
 	font-size: 25px
 }
 
-# /* Override RTL for dataframes */
-# [data-testid="stDataFrame"] {
-#     direction: ltr !important;
-#     text-align: left !important;
-# }
+/* Override RTL for dataframes */
+[data-testid="stDataFrame"] {
+    direction: ltr !important;
+    text-align: left !important;
+}
 			
 /* Apply font size to labels */
 .stTextInput label, .stTextArea label, .stNumberInput label, 
@@ -40,8 +40,6 @@ html, body, [data-testid="stAppViewContainer"] {
 	font-size: 25px;  /* Adjust this value as needed */
 }
 
-# comment
-			
 /* Apply font size to dataframes */
 .stDataFrame, .stTable {
 	font-size: 15px;  /* Adjust this value as needed */
