@@ -17,6 +17,8 @@ from bidi.algorithm import get_display
 # from authentication import authenticate
 from datetime import datetime
 
+st.set_page_config(page_title="גומל חסד", layout="wide")
+
 st.markdown("""
 <style>
 /* Apply RTL globally */
