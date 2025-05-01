@@ -42,7 +42,7 @@ html, body, [data-testid="stAppViewContainer"] {
 
 /* Apply font size to dataframes */
 .stDataFrame, .stTable {
-	font-size: 33px;  /* Adjust this value as needed */
+	font-size: 25px;  /* Adjust this value as needed */
 }
 			
 
