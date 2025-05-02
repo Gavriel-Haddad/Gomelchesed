@@ -332,12 +332,12 @@ def get_report_by_person(name: str, year: str = None):
 
 		previous_year_row = {"סכום": previous_total, "מצוה" : "", "פרשה": f"יתרה משנה קודמת", "שנה": "", "תאריך": [None]}
 		previous_year_row = pd.DataFrame.from_dict(previous_year_row)
-		sum_row = {"סכום": previous_total + yearly_purchases_sum, "מצוה" : "", "פרשה": "", "שנה": f'סה"כ', "תאריך": [None]}
+		sum_row = {"סכום": previous_total + yearly_purchases_sum, "מצוה" : "", "פרשה": f'סה"כ', "שנה": "", "תאריך": [None]}
 		sum_row = pd.DataFrame(sum_row)
 		yearly_purchases_report = pd.concat([previous_year_row, yearly_purchases_report, sum_row], ignore_index=True)
 
 		general_report = pd.DataFrame.from_dict(general_report)
-		return (general_report, yearly_donations_report, yearly_purchases_report.drop(["level", "שנה"], axis=1))
+		return (general_report, yearly_donations_report.drop(["שנה"], axis=1), yearly_purchases_report.drop(["level", "שנה"], axis=1))
 	# else:
 	# 	purchases_report = st.session_state["PURCHASES"][st.session_state["PURCHASES"]["שם"] == name].drop("שם", axis=1)
 	# 	donations_report = st.session_state["DONATIONS"][st.session_state["DONATIONS"]["שם"] == name].drop("שם", axis=1)
@@ -398,173 +398,185 @@ def get_general_report():
 
 
 
+	# if "logged_in" not in st.session_state:
+	# 	if authenticate():
+	# 		st.rerun()
+	# else:
 
-# if "logged_in" not in st.session_state:
-# 	if authenticate():
-# 		st.rerun()
-# else:
-if "purchase_key" not in st.session_state:
-	st.session_state["purchase_key"] = 0
-if "fix_key" not in st.session_state:
-	st.session_state["fix_key"] = 0
-if "purchase_submitted" not in st.session_state:
-	st.session_state["purchase_submitted"] = False
-if "donation_submitted" not in st.session_state:
-	st.session_state["donation_submitted"] = False
-if "reciepts_submitted" not in st.session_state:
-	st.session_state["reciepts_submitted"] = False
-if "db_loaded" not in st.session_state:
-	with st.spinner("אנחנו מכינים הכל... אנא התאזרו בסבלנות"):
-		dal.load_db()
-	st.session_state["db_loaded"] = True
-
-
-actions = ["למלא דוח שבועי", "לתעד תרומה", "להוציא קבלות", "להוציא דוח", "לעשות תיקון"]
-action = st.selectbox("מה תרצה לעשות?", options=actions, index=None, placeholder="בחר אפשרות")#, key=st.session_state["purchase_key"])
-
-if action != None:
-	if action == "למלא דוח שבועי":
-		handle_purchase()
-
-		if st.session_state["purchase_submitted"]:
-			st.success("הושלם בהצלחה!")
-			time.sleep(0.2)
-
-			st.session_state["purchase_submitted"] = False
-
-			st.rerun()
-	elif action == "לתעד תרומה":
-		handle_donation()
-
-		if st.session_state["donation_submitted"]:
-			st.success("הושלם בהצלחה!")
-			time.sleep(0.2)
-
-			st.session_state["purchase_key"] += 1
-			st.session_state["donation_submitted"] = False
-
-			st.rerun()
-	elif action == "להוציא דוח":
-		options = ["לפי מתפלל", "לפי פרשה", "כללי"]
-		choice = st.selectbox("איזה דוח תרצה להוציא?", options=options, index=None, placeholder="בחר דוח")
+try:
+	if "purchase_key" not in st.session_state:
+		st.session_state["purchase_key"] = 0
+	if "fix_key" not in st.session_state:
+		st.session_state["fix_key"] = 0
+	if "purchase_submitted" not in st.session_state:
+		st.session_state["purchase_submitted"] = False
+	if "donation_submitted" not in st.session_state:
+		st.session_state["donation_submitted"] = False
+	if "reciepts_submitted" not in st.session_state:
+		st.session_state["reciepts_submitted"] = False
+	if "db_loaded" not in st.session_state:
+		with st.spinner("אנחנו מכינים הכל... אנא התאזרו בסבלנות"):
+			dal.load_db()
+		st.session_state["db_loaded"] = True
 
 
-		if choice == "לפי מתפלל":
-			name = st.selectbox("על מי תרצה להוציא דוח?", options=dal.get_all_people(), index=None, placeholder="בחר מתפלל")
+	actions = ["למלא דוח שבועי", "לתעד תרומה", "להוציא קבלות", "להוציא דוח", "לעשות תיקון"]
+	action = st.selectbox("מה תרצה לעשות?", options=actions, index=None, placeholder="בחר אפשרות")#, key=st.session_state["purchase_key"])
+
+	if action != None:
+		if action == "למלא דוח שבועי":
+			handle_purchase()
+
+			if st.session_state["purchase_submitted"]:
+				st.success("הושלם בהצלחה!")
+				time.sleep(0.2)
+
+				st.session_state["purchase_submitted"] = False
+
+				st.rerun()
+		elif action == "לתעד תרומה":
+			handle_donation()
+
+			if st.session_state["donation_submitted"]:
+				st.success("הושלם בהצלחה!")
+				time.sleep(0.2)
+
+				st.session_state["purchase_key"] += 1
+				st.session_state["donation_submitted"] = False
+
+				st.rerun()
+		elif action == "להוציא דוח":
+			options = ["לפי מתפלל", "לפי פרשה", "כללי"]
+			choice = st.selectbox("איזה דוח תרצה להוציא?", options=options, index=None, placeholder="בחר דוח")
+
+
+			if choice == "לפי מתפלל":
+				name = st.selectbox("על מי תרצה להוציא דוח?", options=dal.get_all_people(), index=None, placeholder="בחר מתפלל")
+				year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
+				
+				if name != None:
+					general_report, donations_report, purchases_report = get_report_by_person(name, year)
+
+					st.write("סיכום")
+					display_dataframe(general_report)
+
+					st.write("חובות")
+					display_dataframe(purchases_report)
+
+					st.write("תרומות")
+					display_dataframe(donations_report)
+
+
+					# Download buttons
+					reports = [general_report, purchases_report, donations_report]
+					titles = ["סיכום", "חובות", "תרומות"]
+
+					excel_file = to_excel_with_titles(reports, titles)
+					pdf_file = to_pdf_reportlab(reports, titles)
+
+					cols = st.columns([0.5,1,0.5,1,0.5])
+					year = str(year).replace('"', '')
+					cols[1].download_button("📥 Download as Excel", data=excel_file, file_name=f"{name} - {year}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+					cols[3].download_button("📄 Download as PDF", data=pdf_file, file_name=f"{name} - {year}.pdf", mime="application/pdf")
+			elif choice == "לפי פרשה":
+				year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
+				if year != None:
+					day = st.text_input("על איזה פרשה תרצה להוציא דוח?", placeholder="בחר פרשה")
+
+				if st.button("הוצא דוח"):
+					if year != None and day != "":
+						report, message= get_report_by_day(year, day)
+						
+						st.write(message)
+						display_dataframe(report)
+			elif choice == "כללי":
+				total, general_report = get_general_report()
+
+				st.write(f"כסף בחוץ: {total:,}")
+				display_dataframe(general_report)
+		elif action == "להוציא קבלות":
+			handle_reciepts()
+			
+			if st.session_state["reciepts_submitted"]:
+				st.success("הושלם בהצלחה!")
+				time.sleep(0.2)
+
+				st.session_state["purchase_key"] += 1
+				st.session_state["reciepts_submitted"] = False
+
+				st.rerun()
+		elif action == "לעשות תיקון":
+			name = st.selectbox("אצל מי צריך לתקן?", options=dal.get_all_people(), index=None, placeholder="בחר מתפלל", key=f"{st.session_state['fix_key']}")
 			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
 			
 			if name != None:
-				general_report, donations_report, purchases_report = get_report_by_person(name, year)
-
-				st.write("סיכום")
-				display_dataframe(general_report)
+				_, donations_report, purchases_report = get_report_by_person(name, year)
+				purchases_report.reset_index(inplace=True, drop=True)
+				purchases_report.drop([0, len(purchases_report) - 1], axis=0, inplace=True)
 
 				st.write("חובות")
-				display_dataframe(purchases_report)
+				purchases_report.insert(0, "?האם למחוק", False)
+				purchases_report.reset_index(drop=True, inplace=True)
+				edited_purchases_report = st.data_editor(purchases_report, column_config={
+					"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
+					"מצוה": st.column_config.SelectboxColumn(options=st.session_state["MITZVOT"])
+				}, hide_index=True, key="purchases_data_editor")
 
 				st.write("תרומות")
-				display_dataframe(donations_report)
+				donations_report.insert(0, "?האם למחוק", False)
+				donations_report.reset_index(drop=True, inplace=True)
+				edited_donations_report = st.data_editor(donations_report, column_config={
+					"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
+				}, hide_index=True, key="donations_data_editor")
 
+				if st.button("שמור"):
+					edited_purchases_report.insert(1, "שם", name)
+					edited_purchases_report.insert(5, "שנה", year)
+					edited_donations_report.insert(5, "שם", name)
+					edited_donations_report.insert(7, "שנה", year)
 
-				# Download buttons
-				reports = [general_report, purchases_report, donations_report]
-				titles = ["סיכום", "חובות", "תרומות"]
+					edited_purchases_report = edited_purchases_report[~edited_purchases_report["?האם למחוק"]]
+					edited_donations_report = edited_donations_report[~edited_donations_report["?האם למחוק"]]
 
-				excel_file = to_excel_with_titles(reports, titles)
-				pdf_file = to_pdf_reportlab(reports, titles)
+					edited_purchases_report.drop(["?האם למחוק"], axis=1, inplace=True)
+					edited_donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
+					purchases_report.drop(["?האם למחוק"], axis=1, inplace=True)
+					donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
 
-				cols = st.columns([0.5,1,0.5,1,0.5])
-				year = str(year).replace('"', '')
-				cols[1].download_button("📥 Download as Excel", data=excel_file, file_name=f"{name} - {year}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-				cols[3].download_button("📄 Download as PDF", data=pdf_file, file_name=f"{name} - {year}.pdf", mime="application/pdf")
-		elif choice == "לפי פרשה":
-			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
-			if year != None:
-				day = st.text_input("על איזה פרשה תרצה להוציא דוח?", placeholder="בחר פרשה")
+					with st.spinner("שומר..."):
+						dal.update_person_data(name, year, edited_purchases_report, edited_donations_report)
 
-			if st.button("הוצא דוח"):
-				if year != None and day != "":
-					report, message= get_report_by_day(year, day)
-					
-					st.write(message)
-					display_dataframe(report)
-		elif choice == "כללי":
-			total, general_report = get_general_report()
+						all_data = pd.DataFrame(st.session_state["PURCHASES"]).reset_index(drop=True)
+						person_data_before_edit = purchases_report
+						person_data_before_edit.insert(1, "שם", name)
+						person_data_before_edit.insert(5, "שנה", year)
+						combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
+						duplicate_column_set = list(combined.columns)
+						duplicate_column_set.remove("level")
+						all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True, subset=duplicate_column_set)
+						st.session_state["PURCHASES"] = pd.concat([all_data_without_person, edited_purchases_report])
 
-			st.write(f"כסף בחוץ: {total:,}")
-			display_dataframe(general_report)
-	elif action == "להוציא קבלות":
-		handle_reciepts()
-		
-		if st.session_state["reciepts_submitted"]:
-			st.success("הושלם בהצלחה!")
-			time.sleep(0.2)
+						all_data = pd.DataFrame(st.session_state["DONATIONS"]).reset_index(drop=True)
+						person_data_before_edit = donations_report
+						person_data_before_edit.insert(1, "שם", name)
+						person_data_before_edit.insert(7, "שנה", year)
+						combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
+						all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True)
+						st.session_state["DONATIONS"] = pd.concat([all_data_without_person, edited_donations_report])
 
-			st.session_state["purchase_key"] += 1
-			st.session_state["reciepts_submitted"] = False
+					st.success("נשמר בהצלחה")
+					st.session_state["fix_key"] += 1
 
-			st.rerun()
-	elif action == "לעשות תיקון":
-		name = st.selectbox("אצל מי צריך לתקן?", options=dal.get_all_people(), index=None, placeholder="בחר מתפלל", key=f"{st.session_state['fix_key']}")
-		year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
-		
-		if name != None:
-			_, donations_report, purchases_report = get_report_by_person(name, year)
-			purchases_report.reset_index(inplace=True, drop=True)
-			purchases_report.drop([0, len(purchases_report) - 1], axis=0, inplace=True)
+					time.sleep(0.2)
+					st.rerun()
 
-			st.write("חובות")
-			purchases_report.insert(0, "?האם למחוק", False)
-			purchases_report.reset_index(drop=True, inplace=True)
-			edited_purchases_report = st.data_editor(purchases_report, column_config={
-				"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
-				"מצוה": st.column_config.SelectboxColumn(options=st.session_state["MITZVOT"])
-			}, hide_index=True, key="purchases_data_editor")
-
-			st.write("תרומות")
-			donations_report.insert(0, "?האם למחוק", False)
-			donations_report.reset_index(drop=True, inplace=True)
-			edited_donations_report = st.data_editor(donations_report, column_config={
-				"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
-			}, hide_index=True, key="donations_data_editor")
-
-			if st.button("שמור"):
-				edited_purchases_report.insert(1, "שם", name)
-				edited_donations_report.insert(5, "שם", name)
-
-				edited_purchases_report = edited_purchases_report[~edited_purchases_report["?האם למחוק"]]
-				edited_donations_report = edited_donations_report[~edited_donations_report["?האם למחוק"]]
-
-				edited_purchases_report.drop(["?האם למחוק"], axis=1, inplace=True)
-				edited_donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
-				purchases_report.drop(["?האם למחוק"], axis=1, inplace=True)
-				donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
-
-				with st.spinner("שומר..."):
-					dal.update_person_data(name, year, edited_purchases_report, edited_donations_report)
-
-					all_data = pd.DataFrame(st.session_state["PURCHASES"]).reset_index(drop=True)
-					person_data_before_edit = purchases_report
-					person_data_before_edit.insert(1, "שם", name)
-					combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
-					duplicate_column_set = list(combined.columns)
-					duplicate_column_set.remove("level")
-					all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True, subset=duplicate_column_set)
-					st.session_state["PURCHASES"] = pd.concat([all_data_without_person, edited_purchases_report])
-
-					all_data = pd.DataFrame(st.session_state["DONATIONS"]).reset_index(drop=True)
-					person_data_before_edit = donations_report
-					person_data_before_edit.insert(1, "שם", name)
-					combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
-					all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True)
-					st.session_state["DONATIONS"] = pd.concat([all_data_without_person, edited_donations_report])
-					
-				st.success("נשמר בהצלחה")
-				st.session_state["fix_key"] += 1
-
-				time.sleep(0.2)
-				st.rerun()
-
+except Exception as e:
+	st.error("""
+			מצטערים... קרתה תקלה...\n\n
+		  אנא פנו לצוות התמיכה הטכנית בטלפון 0508248214
+		""")
+	
+	st.error(str(e))
 
 
 
