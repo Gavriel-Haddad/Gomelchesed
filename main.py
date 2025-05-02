@@ -337,7 +337,7 @@ def get_report_by_person(name: str, year: str = None):
 		yearly_purchases_report = pd.concat([previous_year_row, yearly_purchases_report, sum_row], ignore_index=True)
 
 		general_report = pd.DataFrame.from_dict(general_report)
-		return (general_report, yearly_donations_report.drop(["שנה"], axis=1), yearly_purchases_report.drop(["level", "שנה"], axis=1))
+		return (general_report, yearly_donations_report, yearly_purchases_report.drop(["level"], axis=1))
 	# else:
 	# 	purchases_report = st.session_state["PURCHASES"][st.session_state["PURCHASES"]["שם"] == name].drop("שם", axis=1)
 	# 	donations_report = st.session_state["DONATIONS"][st.session_state["DONATIONS"]["שם"] == name].drop("שם", axis=1)
@@ -403,6 +403,8 @@ def get_general_report():
 	# 		st.rerun()
 	# else:
 
+
+
 try:
 	if "purchase_key" not in st.session_state:
 		st.session_state["purchase_key"] = 0
@@ -456,7 +458,9 @@ try:
 				
 				if name != None:
 					general_report, donations_report, purchases_report = get_report_by_person(name, year)
-
+					purchases_report.drop(["שנה"], axis=1, inplace=True)
+					donations_report.drop(["שנה"], axis=1, inplace=True)
+					
 					st.write("סיכום")
 					display_dataframe(general_report)
 
@@ -531,9 +535,7 @@ try:
 
 				if st.button("שמור"):
 					edited_purchases_report.insert(1, "שם", name)
-					edited_purchases_report.insert(5, "שנה", year)
 					edited_donations_report.insert(5, "שם", name)
-					edited_donations_report.insert(7, "שנה", year)
 
 					edited_purchases_report = edited_purchases_report[~edited_purchases_report["?האם למחוק"]]
 					edited_donations_report = edited_donations_report[~edited_donations_report["?האם למחוק"]]
@@ -549,7 +551,6 @@ try:
 						all_data = pd.DataFrame(st.session_state["PURCHASES"]).reset_index(drop=True)
 						person_data_before_edit = purchases_report
 						person_data_before_edit.insert(1, "שם", name)
-						person_data_before_edit.insert(5, "שנה", year)
 						combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
 						duplicate_column_set = list(combined.columns)
 						duplicate_column_set.remove("level")
@@ -559,7 +560,6 @@ try:
 						all_data = pd.DataFrame(st.session_state["DONATIONS"]).reset_index(drop=True)
 						person_data_before_edit = donations_report
 						person_data_before_edit.insert(1, "שם", name)
-						person_data_before_edit.insert(7, "שנה", year)
 						combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
 						all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True)
 						st.session_state["DONATIONS"] = pd.concat([all_data_without_person, edited_donations_report])
@@ -571,12 +571,14 @@ try:
 					st.rerun()
 
 except Exception as e:
-	st.error("""
-			מצטערים... קרתה תקלה...\n\n
-		  אנא פנו לצוות התמיכה הטכנית בטלפון 0508248214
-		""")
+	# st.error("""
+	# 		מצטערים... קרתה תקלה...\n\n
+	# 	  אנא פנו לצוות התמיכה הטכנית בטלפון 0508248214
+	# 	""")
 	
-	st.error(str(e))
+	# st.error(str(e))
+
+	raise e
 
 
 
