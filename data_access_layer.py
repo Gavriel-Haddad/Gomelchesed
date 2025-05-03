@@ -23,7 +23,8 @@ def get_all_people():
 	return sorted(st.session_state["PEOPLE"])
 
 def get_all_years():
-	return sorted(list(set(st.session_state["PURCHASES"]["שנה"].tolist())))
+	return sorted(list(set(st.session_state["PURCHASES"]["שנה"].tolist() + 
+                        st.session_state["DONATIONS"]["שנה"].tolist())))
 
 def get_last_yesr():
 	if len(get_all_years()) > 0:
@@ -41,6 +42,14 @@ def get_all_donations(reciepted):
 		return st.session_state["DONATIONS"][~st.session_state["DONATIONS"]["קבלה"]]
 
 def insert_purchase(date, year, day, name, amount, mitsva):
+    if not date \
+        or not year \
+        or not day \
+        or not name \
+        or not mitsva \
+        or amount == 0:
+          raise Exception("מידע חסר")
+
     query = f"""
         INSERT INTO purchases (תאריך, שנה, פרשה, שם, סכום, מצוה)
         VALUES
@@ -51,6 +60,15 @@ def insert_purchase(date, year, day, name, amount, mitsva):
         con.execute(sa.text(query))
 
 def insert_donation(date, year, name, amount, method, has_reciept, book_number, reciept_number):
+    if not date \
+        or not year \
+        or not name \
+        or not method \
+        or not has_reciept \
+        or amount == 0:
+          raise Exception("מידע חסר")
+
+
     query = f"""
         insert into donations (תאריך, שנה, שם, סכום, "אופן תשלום", קבלה, "מספר פנקס", "מספר קבלה")
 		VALUES
@@ -60,7 +78,15 @@ def insert_donation(date, year, name, amount, method, has_reciept, book_number, 
     with st.session_state["engine"].begin() as con:
         con.execute(sa.text(query))
 		
-def mark_donations(data: pd.DataFrame):
+def mark_reciepts(data: pd.DataFrame):
+    if data["תאריך"].hasnans \
+        or data["שנה"].hasnans \
+        or data["שם"].hasnans \
+        or data["אופן תשלום"].hasnans \
+        or data["קבלה"].hasnans \
+        or 0 in data["סכום"].values.tolist():
+          raise Exception("מידע חסר")
+    
     truncate_query = "TRUBCATE TABLE donations"
 	
     with st.session_state["engine"].begin() as con:
@@ -69,12 +95,32 @@ def mark_donations(data: pd.DataFrame):
     data.to_sql("donations", if_exists='append')
 
 def add_new_person(name: str):
+    if not name:
+          raise Exception("מידע חסר")
+    
     query = f"insert into people VALUES ('{name}')"
 	
     with st.session_state["engine"].begin() as con:
         con.execute(sa.text(query))    
 
 def update_person_data(name: str, year, new_purchases: pd.DataFrame, new_donations: pd.DataFrame):
+    if new_donations["תאריך"].hasnans \
+        or new_donations["שנה"].hasnans \
+        or new_donations["שם"].hasnans \
+        or new_donations["אופן תשלום"].hasnans \
+        or new_donations["קבלה"].hasnans \
+        or 0 in new_donations["סכום"].values.tolist():
+          raise Exception("מידע חסר")
+    
+    if new_purchases["תאריך"].hasnans \
+        or new_purchases["שנה"].hasnans \
+        or new_purchases["שם"].hasnans \
+        or new_purchases["אופן תשלום"].hasnans \
+        or new_purchases["קבלה"].hasnans \
+        or 0 in new_purchases["סכום"].values.tolist():
+          raise Exception("מידע חסר")
+
+    
     query = f"""
             delete from purchases
             where "שם" = '{name}'

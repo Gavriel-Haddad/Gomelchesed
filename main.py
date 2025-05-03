@@ -213,7 +213,7 @@ def handle_reciepts():
 
 		if st.button("שמור"):
 			st.session_state["DONATIONS"] = pd.concat([u_data, r_data])
-			dal.mark_donations(st.session_state["DONATIONS"])
+			dal.mark_reciepts(st.session_state["DONATIONS"])
 
 			st.session_state["reciepts_submitted"] = True
 	else:
@@ -245,8 +245,8 @@ def handle_purchase():
 				"מצוה" : [mitsva],
 			}
 
-			st.session_state["PURCHASES"] = pd.concat([st.session_state["PURCHASES"], pd.DataFrame.from_dict(purchase)])
 			dal.insert_purchase(date, year, day, final_name, amount, mitsva)
+			st.session_state["PURCHASES"] = pd.concat([st.session_state["PURCHASES"], pd.DataFrame.from_dict(purchase)])
 
 			if name == "חדש":
 				dal.add_new_person(new_name)
@@ -427,7 +427,10 @@ try:
 
 	if action != None:
 		if action == "למלא דוח שבועי":
-			handle_purchase()
+			try:
+				handle_purchase()
+			except Exception as e:
+				st.error(str(e))
 
 			if st.session_state["purchase_submitted"]:
 				st.success("הושלם בהצלחה!")
@@ -437,7 +440,10 @@ try:
 
 				st.rerun()
 		elif action == "לתעד תרומה":
-			handle_donation()
+			try:
+				handle_donation()
+			except Exception as e:
+				st.error(str(e))
 
 			if st.session_state["donation_submitted"]:
 				st.success("הושלם בהצלחה!")
@@ -499,7 +505,10 @@ try:
 				st.write(f"כסף בחוץ: {total:,}")
 				display_dataframe(general_report)
 		elif action == "להוציא קבלות":
-			handle_reciepts()
+			try:
+				handle_reciepts()
+			except Exception as e:
+				st.error(str(e))
 			
 			if st.session_state["reciepts_submitted"]:
 				st.success("הושלם בהצלחה!")
@@ -513,7 +522,7 @@ try:
 			name = st.selectbox("אצל מי צריך לתקן?", options=dal.get_all_people(), index=None, placeholder="בחר מתפלל", key=f"{st.session_state['fix_key']}")
 			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
 			
-			if name != None:
+			if name != None and year != None:
 				_, donations_report, purchases_report = get_report_by_person(name, year)
 				purchases_report.reset_index(inplace=True, drop=True)
 				purchases_report.drop([0, len(purchases_report) - 1], axis=0, inplace=True)
@@ -534,51 +543,52 @@ try:
 				}, hide_index=True, key="donations_data_editor")
 
 				if st.button("שמור"):
-					edited_purchases_report.insert(1, "שם", name)
-					edited_donations_report.insert(5, "שם", name)
+					try:
+						edited_purchases_report.insert(1, "שם", name)
+						edited_donations_report.insert(5, "שם", name)
 
-					edited_purchases_report = edited_purchases_report[~edited_purchases_report["?האם למחוק"]]
-					edited_donations_report = edited_donations_report[~edited_donations_report["?האם למחוק"]]
+						edited_purchases_report = edited_purchases_report[~edited_purchases_report["?האם למחוק"]]
+						edited_donations_report = edited_donations_report[~edited_donations_report["?האם למחוק"]]
 
-					edited_purchases_report.drop(["?האם למחוק"], axis=1, inplace=True)
-					edited_donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
-					purchases_report.drop(["?האם למחוק"], axis=1, inplace=True)
-					donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
+						edited_purchases_report.drop(["?האם למחוק"], axis=1, inplace=True)
+						edited_donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
+						purchases_report.drop(["?האם למחוק"], axis=1, inplace=True)
+						donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
 
-					with st.spinner("שומר..."):
-						dal.update_person_data(name, year, edited_purchases_report, edited_donations_report)
+						with st.spinner("שומר..."):
+							dal.update_person_data(name, year, edited_purchases_report, edited_donations_report)
 
-						all_data = pd.DataFrame(st.session_state["PURCHASES"]).reset_index(drop=True)
-						person_data_before_edit = purchases_report
-						person_data_before_edit.insert(1, "שם", name)
-						combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
-						duplicate_column_set = list(combined.columns)
-						duplicate_column_set.remove("level")
-						all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True, subset=duplicate_column_set)
-						st.session_state["PURCHASES"] = pd.concat([all_data_without_person, edited_purchases_report])
+							all_data = pd.DataFrame(st.session_state["PURCHASES"]).reset_index(drop=True)
+							person_data_before_edit = purchases_report
+							person_data_before_edit.insert(1, "שם", name)
+							combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
+							duplicate_column_set = list(combined.columns)
+							duplicate_column_set.remove("level")
+							all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True, subset=duplicate_column_set)
+							st.session_state["PURCHASES"] = pd.concat([all_data_without_person, edited_purchases_report])
 
-						all_data = pd.DataFrame(st.session_state["DONATIONS"]).reset_index(drop=True)
-						person_data_before_edit = donations_report
-						person_data_before_edit.insert(1, "שם", name)
-						combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
-						all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True)
-						st.session_state["DONATIONS"] = pd.concat([all_data_without_person, edited_donations_report])
+							all_data = pd.DataFrame(st.session_state["DONATIONS"]).reset_index(drop=True)
+							person_data_before_edit = donations_report
+							person_data_before_edit.insert(1, "שם", name)
+							combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
+							all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True)
+							st.session_state["DONATIONS"] = pd.concat([all_data_without_person, edited_donations_report])
 
-					st.success("נשמר בהצלחה")
-					st.session_state["fix_key"] += 1
+						st.success("נשמר בהצלחה")
+						st.session_state["fix_key"] += 1
 
-					time.sleep(0.2)
-					st.rerun()
+						time.sleep(0.2)
+						st.rerun()
+					except Exception as e:
+						st.error(str(e))
 
 except Exception as e:
-	# st.error("""
-	# 		מצטערים... קרתה תקלה...\n\n
-	# 	  אנא פנו לצוות התמיכה הטכנית בטלפון 0508248214
-	# 	""")
+	st.error("""
+			מצטערים... קרתה תקלה...\n\n
+		  אנא פנו לצוות התמיכה הטכנית בטלפון 0508248214
+		""")
 	
-	# st.error(str(e))
-
-	raise e
+	st.error(str(e))
 
 
 
