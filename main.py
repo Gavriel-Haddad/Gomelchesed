@@ -357,11 +357,13 @@ def get_report_by_person(name: str, year: str = None):
 	# 	return (general_report, donations_report, purchases_report)
 
 def get_report_by_day(year: str, day: str):
-	report = st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שנה"] == year) & (st.session_state["PURCHASES"]["פרשה"].str.contains(day))]
+	report = pd.DataFrame(st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שנה"] == year) & (st.session_state["PURCHASES"]["פרשה"].str.contains(day))])
 	report = report.sort_values(by=["תאריך", "level"])
 
+	display_day = sorted(report["פרשה"].tolist(), key=len)[0]
+
 	date = datetime.strftime(report["תאריך"].tolist()[0], "%d.%m.%Y")
-	message = f'פרשת "{day}" {year} - {date}'
+	message = f'פרשת "{display_day}" {year} - {date}'
 
 	total = report["סכום"].sum()
 	total_row = ["","","", "", 'סה"כ', "", total]
@@ -557,7 +559,7 @@ try:
 
 						with st.spinner("שומר..."):
 							dal.update_person_data(name, year, edited_purchases_report, edited_donations_report)
-
+							
 							all_data = pd.DataFrame(st.session_state["PURCHASES"]).reset_index(drop=True)
 							person_data_before_edit = purchases_report
 							person_data_before_edit.insert(1, "שם", name)
@@ -580,7 +582,7 @@ try:
 						time.sleep(0.2)
 						st.rerun()
 					except Exception as e:
-						st.error(str(e))
+						st.error(str(e) + " was the error")
 
 except Exception as e:
 	st.error("""

@@ -115,8 +115,8 @@ def update_person_data(name: str, year, new_purchases: pd.DataFrame, new_donatio
     if new_purchases["תאריך"].hasnans \
         or new_purchases["שנה"].hasnans \
         or new_purchases["שם"].hasnans \
-        or new_purchases["אופן תשלום"].hasnans \
-        or new_purchases["קבלה"].hasnans \
+        or new_purchases["פרשה"].hasnans \
+        or new_purchases["מצוה"].hasnans \
         or 0 in new_purchases["סכום"].values.tolist():
           raise Exception("מידע חסר")
 
