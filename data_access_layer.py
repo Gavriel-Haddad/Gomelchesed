@@ -64,7 +64,6 @@ def insert_donation(date, year, name, amount, method, has_reciept, book_number, 
         or not year \
         or not name \
         or not method \
-        or not has_reciept \
         or amount == 0:
           raise Exception("מידע חסר")
 

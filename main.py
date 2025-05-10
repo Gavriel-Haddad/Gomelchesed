@@ -63,24 +63,24 @@ def display_text_in_center(text):
 		""", unsafe_allow_html=True)
 
 def display_dataframe(data: pd.DataFrame):
-	st.dataframe(data, width=1100, column_config={
+	st.dataframe(data, use_container_width=True, column_config={
 		"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
 	},
 	hide_index=True)
 
 
 def to_excel_with_titles(dfs, titles):
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        workbook = writer.book
-        worksheet = workbook.add_worksheet("Sheet1")
-        writer.sheets["Sheet1"] = worksheet
+	output = io.BytesIO()
+	with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+		workbook = writer.book
+		worksheet = workbook.add_worksheet("Sheet1")
+		writer.sheets["Sheet1"] = worksheet
 
         # Set worksheet RTL
-        worksheet.right_to_left()
+		worksheet.right_to_left()
 
         # Title style (RTL)
-        title_format = workbook.add_format({
+		title_format = workbook.add_format({
             'bold': True,
             'font_size': 14,
             'align': 'center',
@@ -90,29 +90,40 @@ def to_excel_with_titles(dfs, titles):
         })
 
         # Column header format (RTL aligned)
-        header_format = workbook.add_format({
+		header_format = workbook.add_format({
             'align': 'right',
             'bold': True
         })
 
-        row = 0
-        for df, title in zip(dfs, titles):
-            col_count = len(df.columns)
+		row = 0
+		for df, title in zip(dfs, titles):
+			col_count = len(df.columns)
 
             # Merge title
-            worksheet.merge_range(row, 0, row, col_count - 1, title, title_format)
-            row += 2
+			worksheet.merge_range(row, 0, row, col_count - 1, title, title_format)
+			row += 2
 
             # Write table data
-            df.to_excel(writer, sheet_name="Sheet1", startrow=row + 1, index=False, header=False)
+			df.to_excel(writer, sheet_name="Sheet1", startrow=row + 1, index=False, header=False)
 
             # Write column headers manually with right alignment
-            for col_idx, col_name in enumerate(df.columns):
-                worksheet.write(row, col_idx, col_name, header_format)
-            row += len(df) + 4
+			for col_idx, col_name in enumerate(df.columns):
+				worksheet.write(row, col_idx, col_name, header_format)
+			row += len(df) + 4
 
-    output.seek(0)
-    return output
+			# Auto-fit columns
+			for col_idx, col_name in enumerate(df.columns):
+				if not df.empty:
+					max_len = max(
+						df[col_name].astype(str).map(len).max(),
+						len(str(col_name))
+					)
+					worksheet.set_column(col_idx, col_idx, max_len + 2)
+				else:
+					max_len = len(str(col_name))  # fallback to just the column header
+
+	output.seek(0)
+	return output
 
 def to_pdf_reportlab(dfs, titles):
 	def reshape_hebrew(text):
@@ -223,6 +234,7 @@ def handle_purchase():
 	date = st.date_input("תאריך", format="DD.MM.YYYY")
 	year = st.text_input("שנה", value=dal.get_last_yesr())
 	day = st.text_input("פרשה")
+	mitsva = st.selectbox("מצוה", options=st.session_state["MITZVOT"], index=None, key=f"mitsva {st.session_state['purchase_key']}", label_visibility='collapsed')
 	name = st.selectbox("שם", options=dal.get_all_people() + ["חדש"], index=None, placeholder="בחר מתפלל", key=f"name {st.session_state['purchase_key']}")
 
 	if name == "חדש":
@@ -231,7 +243,6 @@ def handle_purchase():
 		new_name = None  # to keep variable defined
 
 	if name != None:
-		mitsva = st.selectbox("מצוה", options=st.session_state["MITZVOT"], index=None, key=f"mitsva {st.session_state['purchase_key']}", label_visibility='collapsed')
 		amount = st.number_input("סכום", step=1, key=f"amount {st.session_state['purchase_key']}")
 
 		if st.button("שמור"):
@@ -332,9 +343,13 @@ def get_report_by_person(name: str, year: str = None):
 
 		previous_year_row = {"סכום": previous_total, "מצוה" : "", "פרשה": f"יתרה משנה קודמת", "שנה": "", "תאריך": [None]}
 		previous_year_row = pd.DataFrame.from_dict(previous_year_row)
+		
+		separation_row = {"סכום": [""], "מצוה" : [""], "פרשה": [""], "שנה": [""], "תאריך": [""]}
+		separation_row = pd.DataFrame(separation_row)
+
 		sum_row = {"סכום": previous_total + yearly_purchases_sum, "מצוה" : "", "פרשה": f'סה"כ', "שנה": "", "תאריך": [None]}
 		sum_row = pd.DataFrame(sum_row)
-		yearly_purchases_report = pd.concat([previous_year_row, yearly_purchases_report, sum_row], ignore_index=True)
+		yearly_purchases_report = pd.concat([previous_year_row, yearly_purchases_report, separation_row, sum_row], ignore_index=True)
 
 		general_report = pd.DataFrame.from_dict(general_report)
 		return (general_report, yearly_donations_report, yearly_purchases_report.drop(["level"], axis=1))
@@ -366,8 +381,14 @@ def get_report_by_day(year: str, day: str):
 	message = f'פרשת "{display_day}" {year} - {date}'
 
 	total = report["סכום"].sum()
+
+	separation_row = ["", "", "", "", "", "", ""]
+	separation_row = pd.DataFrame([separation_row], columns=report.columns[-1::-1])
+
 	total_row = ["","","", "", 'סה"כ', "", total]
-	report = pd.concat([report, pd.DataFrame([total_row], columns=report.columns[-1::-1])])
+	total_row = pd.DataFrame([total_row], columns=report.columns[-1::-1])
+
+	report = pd.concat([report, separation_row, total_row])
 	
 	report = report.drop(["תאריך", "שנה", "level"], axis=1)
 	if len(set(report["פרשה"].tolist()) - set([""])) == 1:
@@ -488,8 +509,8 @@ try:
 
 					cols = st.columns([0.5,1,0.5,1,0.5])
 					year = str(year).replace('"', '')
-					cols[1].download_button("📥 Download as Excel", data=excel_file, file_name=f"{name} - {year}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-					cols[3].download_button("📄 Download as PDF", data=pdf_file, file_name=f"{name} - {year}.pdf", mime="application/pdf")
+					cols[1].download_button("📥 Save as Excel", data=excel_file, file_name=f"{name} - {year}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+					cols[3].download_button("📄 Save as PDF", data=pdf_file, file_name=f"{name} - {year}.pdf", mime="application/pdf")
 			elif choice == "לפי פרשה":
 				year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
 				if year != None:
@@ -501,6 +522,18 @@ try:
 						
 						st.write(message)
 						display_dataframe(report)
+
+						# Download buttons
+						reports = [report]
+						titles = [message]
+
+						excel_file = to_excel_with_titles(reports, titles)
+						pdf_file = to_pdf_reportlab(reports, titles)
+
+						cols = st.columns([0.5,1,0.5,1,0.1])
+						message = str(message).replace('"', '')
+						cols[1].download_button("📥 Save as Excel", data=excel_file, file_name=f"{message}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+						cols[3].download_button("📄 Save as PDF", data=pdf_file, file_name=f"{message}.pdf", mime="application/pdf")
 			elif choice == "כללי":
 				total, general_report = get_general_report()
 
@@ -527,7 +560,7 @@ try:
 			if name != None and year != None:
 				_, donations_report, purchases_report = get_report_by_person(name, year)
 				purchases_report.reset_index(inplace=True, drop=True)
-				purchases_report.drop([0, len(purchases_report) - 1], axis=0, inplace=True)
+				purchases_report.drop([0, len(purchases_report) - 2, len(purchases_report) - 1], axis=0, inplace=True)
 
 				st.write("חובות")
 				purchases_report.insert(0, "?האם למחוק", False)
