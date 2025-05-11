@@ -49,6 +49,7 @@ def insert_purchase(date, year, day, name, amount, mitsva):
         or not mitsva:
           raise Exception("מידע חסר")
 
+    
     query = f"""
         INSERT INTO purchases (תאריך, שנה, פרשה, שם, סכום, מצוה)
         VALUES
