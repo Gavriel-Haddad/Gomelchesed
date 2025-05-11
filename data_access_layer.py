@@ -46,8 +46,7 @@ def insert_purchase(date, year, day, name, amount, mitsva):
         or not year \
         or not day \
         or not name \
-        or not mitsva \
-        or amount == 0:
+        or not mitsva:
           raise Exception("מידע חסר")
 
     query = f"""
