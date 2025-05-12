@@ -3,24 +3,43 @@ import sqlalchemy as sa
 import pandas as pd
 
 
-def load_db():
-    # st.session_state["engine"] = sa.create_engine(st.secrets["postgres"]["db_url"], pool_pre_ping=True))
-    st.session_state["engine"] = sa.create_engine(r"postgresql://Gomelchesed_owner:npg_Bz0SUtTPgkv1@ep-spring-river-a20x0ye0-pooler.eu-central-1.aws.neon.tech/Gomelchesed?sslmode=require", pool_pre_ping=True)
+def load_mitzvot():
     engine = st.session_state["engine"]
-
     st.session_state["MITZVOT"] = pd.read_sql(sa.text("select מצוה from mitsvot order by level"), engine.connect())["מצוה"].tolist()
+      
+def load_people():
+    engine = st.session_state["engine"]
     st.session_state["PEOPLE"] = pd.read_sql("people", engine.connect())["שם"].tolist()
+
+def load_payment_methods():
+    engine = st.session_state["engine"]
     st.session_state["PAYMENT_METHODS"] = pd.read_sql("payment_methods", engine.connect())["אופן תשלום"].tolist()
 
+def load_donations():
+    engine = st.session_state["engine"]
     st.session_state["DONATIONS"] = pd.read_sql("donations", engine.connect())
+
+def load_purchases():
+    engine = st.session_state["engine"]
     st.session_state["PURCHASES"] = pd.read_sql(sa.text("""
                                             select p.*, m.level 
                                             from purchases p
                                             join mitsvot m on p."מצוה" = m."מצוה"
                                     """), engine.connect())
 
+def load_db():
+    # st.session_state["engine"] = sa.create_engine(st.secrets["postgres"]["db_url"], pool_pre_ping=True))
+    st.session_state["engine"] = sa.create_engine(r"postgresql://Gomelchesed_owner:npg_Bz0SUtTPgkv1@ep-spring-river-a20x0ye0-pooler.eu-central-1.aws.neon.tech/Gomelchesed?sslmode=require", pool_pre_ping=True)
+
+    load_mitzvot()
+    load_people()
+    load_payment_methods()
+    load_donations()
+    load_purchases()
+
+
 def get_all_people():
-	return sorted(st.session_state["PEOPLE"])
+	return sorted(set(st.session_state["PEOPLE"]))
 
 def get_all_years():
 	return sorted(list(set(st.session_state["PURCHASES"]["שנה"].tolist() + 
@@ -86,12 +105,12 @@ def mark_reciepts(data: pd.DataFrame):
         or 0 in data["סכום"].values.tolist():
           raise Exception("מידע חסר")
     
-    truncate_query = "TRUBCATE TABLE donations"
+    # truncate_query = "TRUBCATE TABLE donations"
 	
-    with st.session_state["engine"].begin() as con:
-        con.execute(sa.text(truncate_query))
+    # with st.session_state["engine"].begin() as con:
+    #     con.execute(sa.text(truncate_query))
 		
-    data.to_sql("donations", if_exists='append')
+    data.to_sql("donations", if_exists='replace')
 
 def add_new_person(name: str):
     if not name:

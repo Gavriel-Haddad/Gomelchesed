@@ -223,10 +223,13 @@ def handle_reciepts():
 		hide_index=True)
 
 		if st.button("שמור"):
-			st.session_state["DONATIONS"] = pd.concat([u_data, r_data])
-			dal.mark_reciepts(st.session_state["DONATIONS"])
-
-			st.session_state["reciepts_submitted"] = True
+			# st.session_state["DONATIONS"] = pd.concat([u_data, r_data])
+			# dal.mark_reciepts(st.session_state["DONATIONS"])
+			
+			with st.spinner("שומר..."):
+				dal.mark_reciepts(pd.concat([u_data, r_data]))
+				dal.load_donations()
+				st.session_state["reciepts_submitted"] = True
 	else:
 		st.success("אין על מה להוציא קבלות!!")
 	
@@ -246,25 +249,28 @@ def handle_purchase():
 		amount = st.number_input("סכום", step=1, key=f"amount {st.session_state['purchase_key']}")
 
 		if st.button("שמור"):
-			final_name = name if name != "חדש" else new_name
-			purchase = {
-				"תאריך" : [date],
-				"שנה" : [year],
-				"פרשה" : [day],
-				"שם" : [final_name],
-				"סכום" : [amount],
-				"מצוה" : [mitsva],
-			}
+			with st.spinner("שומר..."):
+				final_name = name if name != "חדש" else new_name
+				purchase = {
+					"תאריך" : [date],
+					"שנה" : [year],
+					"פרשה" : [day],
+					"שם" : [final_name],
+					"סכום" : [amount],
+					"מצוה" : [mitsva],
+				}
 
-			dal.insert_purchase(date, year, day, final_name, amount, mitsva)
-			st.session_state["PURCHASES"] = pd.concat([st.session_state["PURCHASES"], pd.DataFrame.from_dict(purchase)])
+				dal.insert_purchase(date, year, day, final_name, amount, mitsva)
+				dal.load_purchases()
+				# st.session_state["PURCHASES"] = pd.concat([st.session_state["PURCHASES"], pd.DataFrame.from_dict(purchase)])
 
-			if name == "חדש":
-				dal.add_new_person(new_name)
-				st.session_state["PEOPLE"].append(new_name)
+				if name == "חדש":
+					dal.add_new_person(new_name)
+					dal.load_people()
+					# st.session_state["PEOPLE"].append(new_name)
 
-			st.session_state["purchase_key"] += 1
-			st.session_state["purchase_submitted"] = True
+				st.session_state["purchase_key"] += 1
+				st.session_state["purchase_submitted"] = True
 
 def handle_donation():
 	name = st.selectbox("שם", options=dal.get_all_people() + ["חדש"], index=None, placeholder="בחר מתפלל", key=f"name {st.session_state['purchase_key']}")
@@ -289,30 +295,32 @@ def handle_donation():
 			reciept = st.text_input("מספר קבלה")
 
 		if st.button("שמור"):
-			final_name = name if name != "חדש" else new_name
-			donation = {
-				"תאריך" : [date],
-				"שנה" : [year],
-				"שם" : [final_name],
-				"סכום" : [amount],
-				"אופן תשלום": [method],
-				"קבלה" : [has_reciept],
-				"מספר פנקס" : [book],
-				"מספר קבלה" : [reciept],
-			}
+			with st.spinner("שומר..."):
+				final_name = name if name != "חדש" else new_name
+				donation = {
+					"תאריך" : [date],
+					"שנה" : [year],
+					"שם" : [final_name],
+					"סכום" : [amount],
+					"אופן תשלום": [method],
+					"קבלה" : [has_reciept],
+					"מספר פנקס" : [book],
+					"מספר קבלה" : [reciept],
+				}
 
+				donation = pd.DataFrame.from_dict(donation)
+				donation["תאריך"] = donation["תאריך"].astype("datetime64[ns]")
+				
+				dal.insert_donation(date, year, final_name, amount, method, has_reciept, book, reciept)
+				dal.load_donations()
+				# st.session_state["DONATIONS"] = pd.concat([st.session_state["DONATIONS"], pd.DataFrame.from_dict(donation)])
 
-			donation = pd.DataFrame.from_dict(donation)
-			donation["תאריך"] = donation["תאריך"].astype("datetime64[ns]")
-			
-			dal.insert_donation(date, year, final_name, amount, method, has_reciept, book, reciept)
-			st.session_state["DONATIONS"] = pd.concat([st.session_state["DONATIONS"], pd.DataFrame.from_dict(donation)])
+				if name == "חדש":
+					dal.add_new_person(new_name)
+					dal.load_people()
+					# st.session_state["PEOPLE"].append(new_name)
 
-			if name == "חדש":
-				dal.add_new_person(new_name)
-				st.session_state["PEOPLE"].append(new_name)
-
-			st.session_state["donation_submitted"] = True
+				st.session_state["donation_submitted"] = True
 
 
 
@@ -592,22 +600,24 @@ try:
 
 						with st.spinner("שומר..."):
 							dal.update_person_data(name, year, edited_purchases_report, edited_donations_report)
+							dal.load_donations()
+							dal.load_purchases()
 							
-							all_data = pd.DataFrame(st.session_state["PURCHASES"]).reset_index(drop=True)
-							person_data_before_edit = purchases_report
-							person_data_before_edit.insert(1, "שם", name)
-							combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
-							duplicate_column_set = list(combined.columns)
-							duplicate_column_set.remove("level")
-							all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True, subset=duplicate_column_set)
-							st.session_state["PURCHASES"] = pd.concat([all_data_without_person, edited_purchases_report])
+							# all_data = pd.DataFrame(st.session_state["PURCHASES"]).reset_index(drop=True)
+							# person_data_before_edit = purchases_report
+							# person_data_before_edit.insert(1, "שם", name)
+							# combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
+							# duplicate_column_set = list(combined.columns)
+							# duplicate_column_set.remove("level")
+							# all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True, subset=duplicate_column_set)
+							# st.session_state["PURCHASES"] = pd.concat([all_data_without_person, edited_purchases_report])
 
-							all_data = pd.DataFrame(st.session_state["DONATIONS"]).reset_index(drop=True)
-							person_data_before_edit = donations_report
-							person_data_before_edit.insert(1, "שם", name)
-							combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
-							all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True)
-							st.session_state["DONATIONS"] = pd.concat([all_data_without_person, edited_donations_report])
+							# all_data = pd.DataFrame(st.session_state["DONATIONS"]).reset_index(drop=True)
+							# person_data_before_edit = donations_report
+							# person_data_before_edit.insert(1, "שם", name)
+							# combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
+							# all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True)
+							# st.session_state["DONATIONS"] = pd.concat([all_data_without_person, edited_donations_report])
 
 						st.success("נשמר בהצלחה")
 						st.session_state["fix_key"] += 1
