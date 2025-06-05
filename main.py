@@ -622,7 +622,8 @@ try:
 					report.reset_index(drop=True, inplace=True)
 					edited_report = st.data_editor(report, column_config={
 						"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
-						"מצוה": st.column_config.SelectboxColumn(options=st.session_state["MITZVOT"])
+						"מצוה": st.column_config.SelectboxColumn(options=st.session_state["MITZVOT"]),
+						"שם": st.column_config.SelectboxColumn(options=st.session_state["PEOPLE"])
 					}, hide_index=True, key="purchases_data_editor")
 
 
