@@ -39,7 +39,7 @@ def load_db():
 
 
 def get_all_people():
-	return sorted(set(st.session_state["PEOPLE"]))
+    return sorted(set(st.session_state["PEOPLE"]))
 
 def get_all_years():
 	return sorted(list(set(st.session_state["PURCHASES"]["שנה"].tolist() + 
@@ -105,11 +105,6 @@ def mark_reciepts(data: pd.DataFrame):
         or 0 in data["סכום"].values.tolist():
           raise Exception("מידע חסר")
     
-    # truncate_query = "TRUBCATE TABLE donations"
-	
-    # with st.session_state["engine"].begin() as con:
-    #     con.execute(sa.text(truncate_query))
-		
     data.to_sql("donations", if_exists='replace')
 
 def add_new_person(name: str):
@@ -134,8 +129,7 @@ def update_person_data(name: str, year, new_purchases: pd.DataFrame, new_donatio
         or new_purchases["שנה"].hasnans \
         or new_purchases["שם"].hasnans \
         or new_purchases["פרשה"].hasnans \
-        or new_purchases["מצוה"].hasnans \
-        or 0 in new_purchases["סכום"].values.tolist():
+        or new_purchases["מצוה"].hasnans:
           raise Exception("מידע חסר")
 
     
@@ -154,3 +148,27 @@ def update_person_data(name: str, year, new_purchases: pd.DataFrame, new_donatio
     
     new_purchases.to_sql("purchases", st.session_state["engine"].connect(), if_exists='append', index=False)
     new_donations.to_sql("donations", st.session_state["engine"].connect(), if_exists='append', index=False)
+
+def update_day_data(year: str, day: str, new_day: pd.DataFrame):
+    if new_day["תאריך"].hasnans \
+        or new_day["שנה"].hasnans \
+        or new_day["שם"].hasnans \
+        or new_day["פרשה"].hasnans \
+        or new_day["מצוה"].hasnans \
+        or 0 in new_day["סכום"].values.tolist():
+          raise Exception("מידע חסר")
+
+    query = f"""
+            delete from purchases
+            where "פרשה" = '{day}'
+            and "שנה" = '{year}';
+        """
+    
+    with st.session_state["engine"].begin() as con:
+        con.execute(sa.text(query))
+    
+    new_day.to_sql("purchases", st.session_state["engine"].connect(), if_exists='append', index=False)
+      
+
+
+

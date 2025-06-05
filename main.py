@@ -134,7 +134,7 @@ def to_pdf_reportlab(dfs, titles):
 	font_path = os.path.join(os.path.dirname(__file__), "fonts", "DejaVuSans.ttf")
 	pdfmetrics.registerFont(TTFont("DejaVu", font_path))
 
-	# Custom style for Hebrew
+	# Custom style for Hebrew titles
 	styles = getSampleStyleSheet()
 	hebrew_style = ParagraphStyle(
 		name='Hebrew',
@@ -142,46 +142,32 @@ def to_pdf_reportlab(dfs, titles):
 		fontName='DejaVu',
 		fontSize=12,
 		leading=14,
-		rightIndent=0,
-		alignment=2,  # right-align
+		alignment=2,  # right align
+		underlineColor='black'
 	)
 
+	# Prepare PDF document
 	buffer = io.BytesIO()
-	doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=18)
+	doc = SimpleDocTemplate(
+		buffer,
+		pagesize=A4,
+		rightMargin=30,
+		leftMargin=30,
+		topMargin=30,
+		bottomMargin=18
+	)
 
 	elements = []
-	styles = getSampleStyleSheet()
 
+	# Add tables and titles
 	for df, title in zip(dfs, titles):
-        # Section title
-		elements.append(Paragraph(title, styles['Heading2']))
-		elements.append(Spacer(1, 12))
+		df.fillna("", inplace=True)
 
-        # Convert DataFrame to list of lists
-		data = [df.columns.tolist()] + df.values.tolist()
-
-        # Create table
-		table = Table(data)
-		table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#d3d3d3")),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ]))
-		elements.append(table)
-		elements.append(Spacer(1, 24))  # space between tables
-
-	buffer = io.BytesIO()
-	doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=18)
-	elements = []
-
-	for df, title in zip(dfs, titles):
+		elements.append(Spacer(1, 36))
 		elements.append(Paragraph(reshape_hebrew(title), hebrew_style))
 		elements.append(Spacer(1, 12))
 
-        # Prepare reshaped data
+		# Convert dataframe to list of lists (header + rows)
 		data = [[reshape_hebrew(str(col)) for col in df.columns]]
 		for _, row in df.iterrows():
 			reshaped_row = [reshape_hebrew(str(cell)) for cell in row]
@@ -189,20 +175,27 @@ def to_pdf_reportlab(dfs, titles):
 
 		table = Table(data)
 		table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#d3d3d3")),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-            ('FONTNAME', (0, 0), (-1, -1), 'DejaVu'),
-            ('FONTSIZE', (0, 0), (-1, -1), 11),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ]))
+			('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#d3d3d3")),
+			('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+			('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+			('FONTNAME', (0, 0), (-1, -1), 'DejaVu'),
+			('FONTSIZE', (0, 0), (-1, -1), 11),
+			('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+		]))
 		elements.append(table)
 		elements.append(Spacer(1, 24))
 
-	doc.build(elements)
+	# Add בס"ד to top-right of each page
+	def add_bsd(canvas, doc):
+		canvas.setFont("DejaVu", 12)
+		bsd_text = reshape_hebrew('בס"ד')
+		canvas.drawRightString(560, 820, bsd_text)  # adjust as needed
+
+	# Build document with בס"ד
+	doc.build(elements, onFirstPage=add_bsd, onLaterPages=add_bsd)
+
 	buffer.seek(0)
 	return buffer
-
 
 def handle_reciepts():
 	u_data = dal.get_all_donations(reciepted=False)
@@ -325,59 +318,42 @@ def handle_donation():
 
 
 def get_report_by_person(name: str, year: str = None):
-	if year:
-		yearly_purchases_report = st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שם"] == name) & (st.session_state["PURCHASES"]["שנה"] == year)].drop("שם", axis=1)
-		yearly_donations_report = st.session_state["DONATIONS"][(st.session_state["DONATIONS"]["שם"] == name) & (st.session_state["DONATIONS"]["שנה"] == year)].drop("שם", axis=1)
+	yearly_purchases_report = st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שם"] == name) & (st.session_state["PURCHASES"]["שנה"] == year)]
+	yearly_donations_report = st.session_state["DONATIONS"][(st.session_state["DONATIONS"]["שם"] == name) & (st.session_state["DONATIONS"]["שנה"] == year)]
 
-		previous_purchases_report = st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שם"] == name) & (st.session_state["PURCHASES"]["שנה"] < year)].drop("שם", axis=1)
-		previous_donations_report = st.session_state["DONATIONS"][(st.session_state["DONATIONS"]["שם"] == name) & (st.session_state["DONATIONS"]["שנה"] < year)].drop("שם", axis=1)
+	previous_purchases_report = st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שם"] == name) & (st.session_state["PURCHASES"]["שנה"] < year)]
+	previous_donations_report = st.session_state["DONATIONS"][(st.session_state["DONATIONS"]["שם"] == name) & (st.session_state["DONATIONS"]["שנה"] < year)]
 
-		yearly_purchases_sum = yearly_purchases_report["סכום"].sum()
-		yearly_donations_sum = yearly_donations_report["סכום"].sum()
-		previous_purchases_sum = previous_purchases_report["סכום"].sum()
-		previous_donations_sum = previous_donations_report["סכום"].sum()
-		
-		yearly_total = yearly_donations_sum - yearly_purchases_sum
-		previous_total = previous_donations_sum - previous_purchases_sum
+	yearly_purchases_sum = yearly_purchases_report["סכום"].sum()
+	yearly_donations_sum = yearly_donations_report["סכום"].sum()
+	previous_purchases_sum = previous_purchases_report["סכום"].sum()
+	previous_donations_sum = previous_donations_report["סכום"].sum()
+	
+	yearly_total = yearly_donations_sum - yearly_purchases_sum
+	previous_total = previous_donations_sum - previous_purchases_sum
 
-		total_sum = yearly_total + previous_total
+	total = yearly_total + previous_total
 
-		general_report = {
-			'יתרה משנה קודמת': [previous_total],
-			'תרומות שנה נוכחית': [yearly_donations_sum],
-			'חובות שנה נוכחית': [yearly_purchases_sum],
-			'סך הכל': [total_sum],
-		}
+	general_report = {
+		'יתרה משנה קודמת': [previous_total],
+		'תרומות שנה נוכחית': [yearly_donations_sum],
+		'חובות שנה נוכחית': [yearly_purchases_sum],
+		'סך הכל': [total],
+	}
 
-		previous_year_row = {"סכום": previous_total, "מצוה" : "", "פרשה": f"יתרה משנה קודמת", "שנה": "", "תאריך": [None]}
-		previous_year_row = pd.DataFrame.from_dict(previous_year_row)
-		
-		separation_row = {"סכום": [""], "מצוה" : [""], "פרשה": [""], "שנה": [""], "תאריך": [""]}
-		separation_row = pd.DataFrame(separation_row)
+	previous_year_row = {"סכום": previous_total, "מצוה" : "", "פרשה": f"יתרה משנה קודמת", "שנה": "", "תאריך": [None], "שם": [name]}
+	previous_year_row = pd.DataFrame.from_dict(previous_year_row)
+	
+	separation_row = {"סכום": [""], "מצוה" : [""], "פרשה": [""], "שנה": [""], "תאריך": [""]}
+	separation_row = pd.DataFrame(separation_row)
 
-		sum_row = {"סכום": previous_total + yearly_purchases_sum, "מצוה" : "", "פרשה": f'סה"כ', "שנה": "", "תאריך": [None]}
-		sum_row = pd.DataFrame(sum_row)
-		yearly_purchases_report = pd.concat([previous_year_row, yearly_purchases_report, separation_row, sum_row], ignore_index=True)
+	sum_row = {"סכום": previous_total + yearly_purchases_sum, "מצוה" : "", "פרשה": f'סה"כ', "שנה": "", "תאריך": [None]}
+	sum_row = pd.DataFrame(sum_row)
+	yearly_purchases_report = pd.concat([previous_year_row, yearly_purchases_report, separation_row, sum_row], ignore_index=True)
 
-		general_report = pd.DataFrame.from_dict(general_report)
-		return (general_report, yearly_donations_report, yearly_purchases_report.drop(["level"], axis=1))
-	# else:
-	# 	purchases_report = st.session_state["PURCHASES"][st.session_state["PURCHASES"]["שם"] == name].drop("שם", axis=1)
-	# 	donations_report = st.session_state["DONATIONS"][st.session_state["DONATIONS"]["שם"] == name].drop("שם", axis=1)
+	general_report = pd.DataFrame.from_dict(general_report)
 
-	# 	purchases_sum = purchases_report["סכום"].sum()
-	# 	donations_sum = donations_report["סכום"].sum()
-		
-	# 	total = donations_sum - purchases_sum
-
-	# 	general_report = {
-	# 		'תרומות': [donations_sum],
-	# 		'חובות': [purchases_sum],
-	# 		'סך הכל': [total],
-	# 	}
-
-	# 	general_report = pd.DataFrame.from_dict(general_report)
-	# 	return (general_report, donations_report, purchases_report)
+	return (general_report, yearly_donations_report, yearly_purchases_report)
 
 def get_report_by_day(year: str, day: str):
 	report = pd.DataFrame(st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שנה"] == year) & (st.session_state["PURCHASES"]["פרשה"].str.contains(day))])
@@ -398,11 +374,7 @@ def get_report_by_day(year: str, day: str):
 
 	report = pd.concat([report, separation_row, total_row])
 	
-	report = report.drop(["תאריך", "שנה", "level"], axis=1)
-	if len(set(report["פרשה"].tolist()) - set([""])) == 1:
-		return (report.drop(["פרשה"], axis=1), message)
-	else:
-		return (report, message)
+	return (report, message)
 
 def get_general_report():
 	people = dal.get_all_people()
@@ -495,8 +467,8 @@ try:
 				
 				if name != None:
 					general_report, donations_report, purchases_report = get_report_by_person(name, year)
-					purchases_report.drop(["שנה"], axis=1, inplace=True)
-					donations_report.drop(["שנה"], axis=1, inplace=True)
+					purchases_report.drop(["שנה", "שם", "level"], axis=1, inplace=True)
+					donations_report.drop(["שנה", "שם"], axis=1, inplace=True)
 					
 					st.write("סיכום")
 					display_dataframe(general_report)
@@ -527,7 +499,11 @@ try:
 				if st.button("הוצא דוח"):
 					if year != None and day != "":
 						report, message= get_report_by_day(year, day)
-						
+						report.drop(["תאריך", "שנה", "level"], axis=1, inplace=True)
+						if len(set(report["פרשה"].tolist()) - set([""])) == 1:
+							report.drop(["פרשה"], axis=1, inplace=True)
+
+
 						st.write(message)
 						display_dataframe(report)
 
@@ -562,78 +538,124 @@ try:
 
 				st.rerun()
 		elif action == "לעשות תיקון":
-			name = st.selectbox("אצל מי צריך לתקן?", options=dal.get_all_people(), index=None, placeholder="בחר מתפלל", key=f"{st.session_state['fix_key']}")
-			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
-			
-			if name != None and year != None:
-				_, donations_report, purchases_report = get_report_by_person(name, year)
-				purchases_report.reset_index(inplace=True, drop=True)
-				purchases_report.drop([0, len(purchases_report) - 2, len(purchases_report) - 1], axis=0, inplace=True)
+			options = ["לפי מתפלל", "לפי פרשה"]
+			choice = st.selectbox("איזה דוח תרצה לתקן?", options=options, index=None, placeholder="בחר דוח")
 
-				st.write("חובות")
-				purchases_report.insert(0, "?האם למחוק", False)
-				purchases_report.reset_index(drop=True, inplace=True)
-				edited_purchases_report = st.data_editor(purchases_report, column_config={
-					"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
-					"מצוה": st.column_config.SelectboxColumn(options=st.session_state["MITZVOT"])
-				}, hide_index=True, key="purchases_data_editor")
+			if choice == "לפי מתפלל":
+				name = st.selectbox("אצל מי צריך לתקן?", options=dal.get_all_people(), index=None, placeholder="בחר מתפלל", key=f"{st.session_state['fix_key']}")
+				year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
+				
+				if name != None and year != None:
+					_, donations_report, purchases_report = get_report_by_person(name, year)
+					purchases_report.reset_index(inplace=True, drop=True)
+					purchases_report.drop([0, len(purchases_report) - 2, len(purchases_report) - 1], axis=0, inplace=True)
+					purchases_report.drop(["level"], axis=1, inplace=True)
 
-				st.write("תרומות")
-				donations_report.insert(0, "?האם למחוק", False)
-				donations_report.reset_index(drop=True, inplace=True)
-				edited_donations_report = st.data_editor(donations_report, column_config={
-					"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
-				}, hide_index=True, key="donations_data_editor")
+					st.write("חובות")
+					purchases_report.insert(0, "?האם למחוק", False)
+					purchases_report.reset_index(drop=True, inplace=True)
+					edited_purchases_report = st.data_editor(purchases_report, column_config={
+						"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
+						"מצוה": st.column_config.SelectboxColumn(options=st.session_state["MITZVOT"])
+					}, hide_index=True, key="purchases_data_editor")
 
-				if st.button("שמור"):
-					try:
-						edited_purchases_report.insert(1, "שם", name)
-						edited_donations_report.insert(5, "שם", name)
+					st.write("תרומות")
+					donations_report.insert(0, "?האם למחוק", False)
+					donations_report.reset_index(drop=True, inplace=True)
+					edited_donations_report = st.data_editor(donations_report, column_config={
+						"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
+					}, hide_index=True, key="donations_data_editor")
 
-						edited_purchases_report = edited_purchases_report[~edited_purchases_report["?האם למחוק"]]
-						edited_donations_report = edited_donations_report[~edited_donations_report["?האם למחוק"]]
+					if st.button("שמור"):
+						try:
+							# edited_purchases_report.insert(1, "שם", name)
+							# edited_donations_report.insert(5, "שם", name)
 
-						edited_purchases_report.drop(["?האם למחוק"], axis=1, inplace=True)
-						edited_donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
-						purchases_report.drop(["?האם למחוק"], axis=1, inplace=True)
-						donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
+							edited_purchases_report = edited_purchases_report[~edited_purchases_report["?האם למחוק"]]
+							edited_donations_report = edited_donations_report[~edited_donations_report["?האם למחוק"]]
 
-						with st.spinner("שומר..."):
-							dal.update_person_data(name, year, edited_purchases_report, edited_donations_report)
-							dal.load_donations()
-							dal.load_purchases()
-							
-							# all_data = pd.DataFrame(st.session_state["PURCHASES"]).reset_index(drop=True)
-							# person_data_before_edit = purchases_report
-							# person_data_before_edit.insert(1, "שם", name)
-							# combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
-							# duplicate_column_set = list(combined.columns)
-							# duplicate_column_set.remove("level")
-							# all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True, subset=duplicate_column_set)
-							# st.session_state["PURCHASES"] = pd.concat([all_data_without_person, edited_purchases_report])
+							edited_purchases_report.drop(["?האם למחוק"], axis=1, inplace=True)
+							edited_donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
+							purchases_report.drop(["?האם למחוק"], axis=1, inplace=True)
+							donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
 
-							# all_data = pd.DataFrame(st.session_state["DONATIONS"]).reset_index(drop=True)
-							# person_data_before_edit = donations_report
-							# person_data_before_edit.insert(1, "שם", name)
-							# combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
-							# all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True)
-							# st.session_state["DONATIONS"] = pd.concat([all_data_without_person, edited_donations_report])
+							with st.spinner("שומר..."):
+								dal.update_person_data(name, year, edited_purchases_report, edited_donations_report)
+								dal.load_donations()
+								dal.load_purchases()
+								
+								# all_data = pd.DataFrame(st.session_state["PURCHASES"]).reset_index(drop=True)
+								# person_data_before_edit = purchases_report
+								# person_data_before_edit.insert(1, "שם", name)
+								# combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
+								# duplicate_column_set = list(combined.columns)
+								# duplicate_column_set.remove("level")
+								# all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True, subset=duplicate_column_set)
+								# st.session_state["PURCHASES"] = pd.concat([all_data_without_person, edited_purchases_report])
 
-						st.success("נשמר בהצלחה")
-						st.session_state["fix_key"] += 1
+								# all_data = pd.DataFrame(st.session_state["DONATIONS"]).reset_index(drop=True)
+								# person_data_before_edit = donations_report
+								# person_data_before_edit.insert(1, "שם", name)
+								# combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
+								# all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True)
+								# st.session_state["DONATIONS"] = pd.concat([all_data_without_person, edited_donations_report])
 
-						time.sleep(0.2)
-						st.rerun()
-					except Exception as e:
-						st.error(str(e) + " was the error")
+							st.success("נשמר בהצלחה")
+							st.session_state["fix_key"] += 1
+
+							time.sleep(0.2)
+							st.rerun()
+						except Exception as e:
+							st.error(str(e) + " was the error")
+			elif choice == "לפי פרשה":
+				year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
+				day = st.selectbox("באחזה פרשה צריך לתקן?", options=dal.get_all_days(year), index=None, placeholder="בחר פרשה", key=f"{st.session_state['fix_key']}")
+				
+				if year != None and day != None:
+					report, message = get_report_by_day(year, day)
+					report.reset_index(inplace=True, drop=True)
+					report.drop([0, len(report) - 2, len(report) - 1], axis=0, inplace=True)
+					report.drop(["level"], axis=1, inplace=True)
+
+					st.write(message)
+					report.insert(0, "?האם למחוק", False)
+					report.reset_index(drop=True, inplace=True)
+					edited_report = st.data_editor(report, column_config={
+						"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
+						"מצוה": st.column_config.SelectboxColumn(options=st.session_state["MITZVOT"])
+					}, hide_index=True, key="purchases_data_editor")
+
+
+					if st.button("שמור"):
+						try:
+							edited_report = edited_report[~edited_report["?האם למחוק"]]
+							edited_report = edited_report[~edited_report["?האם למחוק"]]
+
+							edited_report.drop(["?האם למחוק"], axis=1, inplace=True)
+							report.drop(["?האם למחוק"], axis=1, inplace=True)
+
+							with st.spinner("שומר..."):
+								dal.update_day_data(year, day, edited_report)
+								dal.load_purchases()
+
+							st.success("נשמר בהצלחה")
+							st.session_state["fix_key"] += 1
+
+							time.sleep(0.2)
+							st.rerun()
+						except Exception as e:
+							st.error(str(e) + " was the error")
+
+
 
 except Exception as e:
-	st.error("""
-			מצטערים... קרתה תקלה...\n\n
-		  אנא פנו לצוות התמיכה הטכנית בטלפון 0508248214
-		""")
+	# st.error("""
+	# 		מצטערים... קרתה תקלה...\n\n
+	# 	  אנא פנו לצוות התמיכה הטכנית בטלפון 0508248214
+	# 	""")
 	
-	st.error(str(e))
+	# st.error(str(e))
+	raise e
 
 
 
