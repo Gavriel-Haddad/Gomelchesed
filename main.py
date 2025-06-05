@@ -538,7 +538,6 @@ try:
 
 				st.rerun()
 		elif action == "לעשות תיקון":
-			st.write("hello")
 			options = ["לפי מתפלל", "לפי פרשה"]
 			choice = st.selectbox("איזה דוח תרצה לתקן?", options=options, index=None, placeholder="בחר דוח")
 
