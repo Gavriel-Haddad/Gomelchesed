@@ -64,11 +64,10 @@ def display_text_in_center(text):
 
 def display_dataframe(data: pd.DataFrame):
 	cols = st.columns([1,1,1])
-	with cols[1]:
-		st.dataframe(data, column_config={
-			"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
-		},
-		hide_index=True)
+	cols[1].dataframe(data, column_config={
+		"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
+	},
+	hide_index=True)
 
 
 def to_excel_with_titles(dfs, titles):
