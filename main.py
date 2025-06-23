@@ -71,7 +71,7 @@ def display_text_in_center(text):
 def display_dataframe(data: pd.DataFrame):
 	cols = st.columns([1,1,1])
 	with cols[1]:
-		st.dataframe(data, use_container_width=True, column_config={
+		st.dataframe(data, use_container_width=False, column_config={
 			"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
 		},
 		hide_index=True)
