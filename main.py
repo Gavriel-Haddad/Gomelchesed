@@ -506,7 +506,7 @@ try:
 						excel_file = to_excel_with_titles(reports, titles)
 						pdf_file = to_pdf_reportlab(reports, titles)
 
-						cols = st.columns([0.5,1,0.5,1,0.1])
+						cols = st.columns([0.5,1,0.5,1,0.5])
 						message = str(message).replace('"', '')
 						cols[1].download_button("📥 Save as Excel", data=excel_file, file_name=f"{message}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 						cols[3].download_button("📄 Save as PDF", data=pdf_file, file_name=f"{message}.pdf", mime="application/pdf")
