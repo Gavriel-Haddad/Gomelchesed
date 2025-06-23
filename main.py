@@ -63,10 +63,12 @@ def display_text_in_center(text):
 		""", unsafe_allow_html=True)
 
 def display_dataframe(data: pd.DataFrame):
-	st.dataframe(data, column_config={
-		"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
-	},
-	hide_index=True)
+	cols = st.columns([1,1,1])
+	with cols[1]:
+		st.dataframe(data, column_config={
+			"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
+		},
+		hide_index=True)
 
 
 def to_excel_with_titles(dfs, titles):
@@ -197,6 +199,8 @@ def to_pdf_reportlab(dfs, titles):
 	buffer.seek(0)
 	return buffer
 
+
+
 def handle_reciepts():
 	u_data = dal.get_all_donations(reciepted=False)
 	r_data = dal.get_all_donations(reciepted=True)
@@ -216,53 +220,45 @@ def handle_reciepts():
 		hide_index=True)
 
 		if st.button("שמור"):
-			# st.session_state["DONATIONS"] = pd.concat([u_data, r_data])
-			# dal.mark_reciepts(st.session_state["DONATIONS"])
-			
 			with st.spinner("שומר..."):
 				dal.mark_reciepts(pd.concat([u_data, r_data]))
-				dal.load_donations()
 				st.session_state["reciepts_submitted"] = True
 	else:
 		st.success("אין על מה להוציא קבלות!!")
 	
 def handle_purchase():
-	date = st.date_input("תאריך", format="DD.MM.YYYY")
+	date = st.date_input("תאריך", format="DD.MM.YYYY", value=None)
 	year = st.text_input("שנה", value=dal.get_last_yesr())
-	day = st.text_input("פרשה")
+	day = st.selectbox("פרשה", options=dal.get_all_days() + ["חדש"], index=None, placeholder="בחר פרשה", key=f"day {st.session_state['purchase_key']}")
+
+	if day == "חדש":
+		new_day = st.text_input("פרשה", placeholder="פרשה חדשה", key=f"new_day {st.session_state['purchase_key']}")
+	else:
+		new_day = ""  # to keep variable defined
+
 	mitsva = st.selectbox("מצוה", options=st.session_state["MITZVOT"], index=None, key=f"mitsva {st.session_state['purchase_key']}", label_visibility='collapsed')
 	name = st.selectbox("שם", options=dal.get_all_people() + ["חדש"], index=None, placeholder="בחר מתפלל", key=f"name {st.session_state['purchase_key']}")
 
 	if name == "חדש":
 		new_name = st.text_input("שם", placeholder="מתפלל חדש", key=f"new_name {st.session_state['purchase_key']}")
 	else:
-		new_name = None  # to keep variable defined
+		new_name = ""  # to keep variable defined
 
 	if name != None:
 		amount = st.number_input("סכום", step=1, key=f"amount {st.session_state['purchase_key']}")
 
 		if st.button("שמור"):
 			with st.spinner("שומר..."):
+				final_day = day if day != "חדש" else new_day
 				final_name = name if name != "חדש" else new_name
-				purchase = {
-					"תאריך" : [date],
-					"שנה" : [year],
-					"פרשה" : [day],
-					"שם" : [final_name],
-					"סכום" : [amount],
-					"מצוה" : [mitsva],
-				}
 
-				dal.insert_purchase(date, year, day, final_name, amount, mitsva)
-				dal.load_purchases()
-				# st.session_state["PURCHASES"] = pd.concat([st.session_state["PURCHASES"], pd.DataFrame.from_dict(purchase)])
+				dal.insert_purchase(date, year, final_day, final_name, amount, mitsva)
 
+				if day == "חדש":
+					dal.add_new_day(new_day)
 				if name == "חדש":
 					dal.add_new_person(new_name)
-					dal.load_people()
-					# st.session_state["PEOPLE"].append(new_name)
 
-				st.session_state["purchase_key"] += 1
 				st.session_state["purchase_submitted"] = True
 
 def handle_donation():
@@ -271,7 +267,7 @@ def handle_donation():
 	if name == "חדש":
 		new_name = st.text_input("שם", placeholder="מתפלל חדש")
 	else:
-		new_name = None  # to keep variable defined
+		new_name = ""  # to keep variable defined
 
 	if name != None:
 		date = st.date_input("תאריך", format="DD.MM.YYYY")
@@ -305,19 +301,15 @@ def handle_donation():
 				donation["תאריך"] = donation["תאריך"].astype("datetime64[ns]")
 				
 				dal.insert_donation(date, year, final_name, amount, method, has_reciept, book, reciept)
-				dal.load_donations()
-				# st.session_state["DONATIONS"] = pd.concat([st.session_state["DONATIONS"], pd.DataFrame.from_dict(donation)])
 
 				if name == "חדש":
 					dal.add_new_person(new_name)
-					dal.load_people()
-					# st.session_state["PEOPLE"].append(new_name)
 
 				st.session_state["donation_submitted"] = True
 
 
 
-def get_report_by_person(name: str, year: str = None):
+def get_report_by_person(name: str, year: str):
 	yearly_purchases_report = st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שם"] == name) & (st.session_state["PURCHASES"]["שנה"] == year)]
 	yearly_donations_report = st.session_state["DONATIONS"][(st.session_state["DONATIONS"]["שם"] == name) & (st.session_state["DONATIONS"]["שנה"] == year)]
 
@@ -437,8 +429,9 @@ try:
 
 			if st.session_state["purchase_submitted"]:
 				st.success("הושלם בהצלחה!")
-				time.sleep(0.2)
+				time.sleep(1)
 
+				st.session_state["purchase_key"] += 1
 				st.session_state["purchase_submitted"] = False
 
 				st.rerun()
@@ -581,24 +574,6 @@ try:
 
 							with st.spinner("שומר..."):
 								dal.update_person_data(name, year, edited_purchases_report, edited_donations_report)
-								dal.load_donations()
-								dal.load_purchases()
-								
-								# all_data = pd.DataFrame(st.session_state["PURCHASES"]).reset_index(drop=True)
-								# person_data_before_edit = purchases_report
-								# person_data_before_edit.insert(1, "שם", name)
-								# combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
-								# duplicate_column_set = list(combined.columns)
-								# duplicate_column_set.remove("level")
-								# all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True, subset=duplicate_column_set)
-								# st.session_state["PURCHASES"] = pd.concat([all_data_without_person, edited_purchases_report])
-
-								# all_data = pd.DataFrame(st.session_state["DONATIONS"]).reset_index(drop=True)
-								# person_data_before_edit = donations_report
-								# person_data_before_edit.insert(1, "שם", name)
-								# combined = pd.concat([all_data, person_data_before_edit, person_data_before_edit])
-								# all_data_without_person = combined.drop_duplicates(keep=False, ignore_index=True)
-								# st.session_state["DONATIONS"] = pd.concat([all_data_without_person, edited_donations_report])
 
 							st.success("נשמר בהצלחה")
 							st.session_state["fix_key"] += 1
@@ -614,7 +589,7 @@ try:
 				if year != None and day != None:
 					report, message = get_report_by_day(year, day)
 					report.reset_index(inplace=True, drop=True)
-					report.drop([0, len(report) - 2, len(report) - 1], axis=0, inplace=True)
+					report.drop([len(report) - 2, len(report) - 1], axis=0, inplace=True)
 					report.drop(["level"], axis=1, inplace=True)
 
 					st.write(message)
@@ -637,7 +612,6 @@ try:
 
 							with st.spinner("שומר..."):
 								dal.update_day_data(year, day, edited_report)
-								dal.load_purchases()
 
 							st.success("נשמר בהצלחה")
 							st.session_state["fix_key"] += 1
