@@ -47,23 +47,6 @@ html, body, [data-testid="stAppViewContainer"] {
 	margin-bottom: 6px;
 	display: block;
 }
-
-/* Limit the width of dataframes */
-div[data-testid="stDataFrame"] {
-    max-width: 700px !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    overflow: auto;
-			
-/* Optional: cap the inner iframe content */
-div[data-testid="stDataFrame"] iframe {
-    width: 100% !important;
-    max-width: 700px !important;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-}
-			
 </style>
 """, unsafe_allow_html=True)
 
@@ -81,7 +64,7 @@ def display_text_in_center(text):
 def display_dataframe(data: pd.DataFrame):
 	cols = st.columns([1,1,1])
 	with cols[1]:
-		st.dataframe(data, use_container_width=False, column_config={
+		st.dataframe(data, width=700, column_config={
 			"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
 		},
 		hide_index=True)
