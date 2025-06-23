@@ -48,12 +48,18 @@ html, body, [data-testid="stAppViewContainer"] {
 	display: block;
 }
 
+/* Limit the width of dataframes */
+div[data-testid="stDataFrame"] {
+    max-width: 700px;
+    margin: auto;
+}
+			
 </style>
 """, unsafe_allow_html=True)
 
 if "css_injected" not in st.session_state:
     st.session_state.css_injected = True
-    time.sleep(1)
+    time.sleep(2)
     st.rerun()
 
 
