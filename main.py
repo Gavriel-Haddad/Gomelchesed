@@ -62,9 +62,9 @@ def display_text_in_center(text):
 		""", unsafe_allow_html=True)
 
 def display_dataframe(data: pd.DataFrame):
-	cols = st.columns([0.75,2.5,0.75])
+	cols = st.columns([1.5,5,1.5])
 	with cols[1]:
-		st.dataframe(data, column_config={
+		st.dataframe(data, use_container_width=True, column_config={
 			"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
 		},
 		hide_index=True)
@@ -479,7 +479,7 @@ try:
 					excel_file = to_excel_with_titles(reports, titles)
 					pdf_file = to_pdf_reportlab(reports, titles)
 
-					cols = st.columns([0.5,1,0.5,1,0.5])
+					cols = st.columns([1.5,2,1,2,1.5])
 					year = str(year).replace('"', '')
 					cols[1].download_button("📥 Save as Excel", data=excel_file, file_name=f"{name} - {year}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 					cols[3].download_button("📄 Save as PDF", data=pdf_file, file_name=f"{name} - {year}.pdf", mime="application/pdf")
@@ -506,7 +506,7 @@ try:
 						excel_file = to_excel_with_titles(reports, titles)
 						pdf_file = to_pdf_reportlab(reports, titles)
 
-						cols = st.columns([0.5,1,0.5,1,0.5])
+						cols = st.columns([1.5,2,1,2,1.5])	
 						message = str(message).replace('"', '')
 						cols[1].download_button("📥 Save as Excel", data=excel_file, file_name=f"{message}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 						cols[3].download_button("📄 Save as PDF", data=pdf_file, file_name=f"{message}.pdf", mime="application/pdf")
