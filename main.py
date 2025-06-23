@@ -49,14 +49,14 @@ html, body, [data-testid="stAppViewContainer"] {
 }
 
 /* Limit the width of dataframes */
-[data-testid="stDataFrame"] {
+div[data-testid="stDataFrame"] {
     max-width: 700px !important;
     margin-left: auto !important;
     margin-right: auto !important;
     overflow: auto;
 			
 /* Optional: cap the inner iframe content */
-[data-testid="stDataFrame"] iframe {
+div[data-testid="stDataFrame"] iframe {
     width: 100% !important;
     max-width: 700px !important;
     display: block;
