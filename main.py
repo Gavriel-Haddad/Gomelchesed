@@ -66,7 +66,11 @@ def display_dataframe(data: pd.DataFrame):
 	with cols[1]:
 		st.dataframe(data, use_container_width=True, column_config={
 			"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
-			"סכום": st.column_config.NumberColumn(format="localized")
+			"סכום": st.column_config.NumberColumn(format="localized"),
+			"סך הכל": st.column_config.NumberColumn(format="localized"),
+			"חובות שנה נוכחית": st.column_config.NumberColumn(format="localized"),
+			"יתרה משנה קודמת": st.column_config.NumberColumn(format="localized"),
+			"תרומות שנה נוכחית": st.column_config.NumberColumn(format="localized")
 		},
 		hide_index=True)
 
