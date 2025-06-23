@@ -479,7 +479,7 @@ try:
 					excel_file = to_excel_with_titles(reports, titles)
 					pdf_file = to_pdf_reportlab(reports, titles)
 
-					cols = st.columns([1.5,2,1,2,1.5])
+					cols = st.columns([1.5, 1.7, 1.6, 1.7, 1.5])
 					year = str(year).replace('"', '')
 					cols[1].download_button("📥 Save as Excel", data=excel_file, file_name=f"{name} - {year}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
 					cols[3].download_button("📄 Save as PDF", data=pdf_file, file_name=f"{name} - {year}.pdf", mime="application/pdf", use_container_width=True)
@@ -506,7 +506,7 @@ try:
 						excel_file = to_excel_with_titles(reports, titles)
 						pdf_file = to_pdf_reportlab(reports, titles)
 
-						cols = st.columns([1.5,2,1,2,1.5])	
+						cols = st.columns([1.5, 1.7, 1.6, 1.7, 1.5])
 						message = str(message).replace('"', '')
 						cols[1].download_button("📥 Save as Excel", data=excel_file, file_name=f"{message}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
 						cols[3].download_button("📄 Save as PDF", data=pdf_file, file_name=f"{message}.pdf", mime="application/pdf", use_container_width=True)
