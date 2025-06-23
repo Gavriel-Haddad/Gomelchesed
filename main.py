@@ -50,8 +50,10 @@ html, body, [data-testid="stAppViewContainer"] {
 
 /* Limit the width of dataframes */
 div[data-testid="stDataFrame"] {
-    max-width: 700px;
-    margin: auto;
+    max-width: 700px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    overflow: auto;
 }
 			
 </style>
