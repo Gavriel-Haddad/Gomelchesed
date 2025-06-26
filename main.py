@@ -81,8 +81,6 @@ def to_excel_with_titles(dfs: list[pd.DataFrame], titles):
 		for col in df.select_dtypes(include=['datetime64[ns]', 'datetime64[ns, UTC]', 'object']):
 			df[col] = df[col].astype('str')
 	
-	st.write(dfs[2].dtypes)
-	
 	output = io.BytesIO()
 	with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
 		workbook = writer.book
