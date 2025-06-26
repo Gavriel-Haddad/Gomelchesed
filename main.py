@@ -75,7 +75,9 @@ def display_dataframe(data: pd.DataFrame):
 		hide_index=True)
 
 
-def to_excel_with_titles(dfs, titles):
+def to_excel_with_titles(dfs: list[pd.DataFrame], titles):
+	dfs = [df[df.columns[::-1]] for df in dfs]
+	
 	output = io.BytesIO()
 	with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
 		workbook = writer.book
