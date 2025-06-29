@@ -238,7 +238,7 @@ def handle_reciepts():
 def handle_purchase():
 	date = st.date_input("תאריך", format="DD.MM.YYYY", value=None)
 	year = st.text_input("שנה", value=dal.get_last_yesr())
-	day = st.selectbox("פרשה", options=dal.get_all_days() + ["חדש"], index=None, placeholder="בחר פרשה", key=f"day {st.session_state['purchase_key']}")
+	day = st.selectbox("פרשה", options=dal.get_all_days() + ["חדש"], index=None, placeholder="בחר פרשה")
 
 	if day == "חדש":
 		new_day = st.text_input("פרשה", placeholder="פרשה חדשה", key=f"new_day {st.session_state['purchase_key']}")
@@ -253,22 +253,21 @@ def handle_purchase():
 	else:
 		new_name = ""  # to keep variable defined
 
-	if name != None:
-		amount = st.number_input("סכום", step=1, key=f"amount {st.session_state['purchase_key']}")
+	amount = st.number_input("סכום", step=1, key=f"amount {st.session_state['purchase_key']}")
 
-		if st.button("שמור"):
-			with st.spinner("שומר..."):
-				final_day = day if day != "חדש" else new_day
-				final_name = name if name != "חדש" else new_name
+	if st.button("שמור"):
+		with st.spinner("שומר..."):
+			final_day = day if day != "חדש" else new_day
+			final_name = name if name != "חדש" else new_name
 
-				dal.insert_purchase(date, year, final_day, final_name, amount, mitsva)
+			dal.insert_purchase(date, year, final_day, final_name, amount, mitsva)
 
-				if day == "חדש":
-					dal.add_new_day(new_day)
-				if name == "חדש":
-					dal.add_new_person(new_name)
+			if day == "חדש":
+				dal.add_new_day(new_day)
+			if name == "חדש":
+				dal.add_new_person(new_name)
 
-				st.session_state["purchase_submitted"] = True
+			st.session_state["purchase_submitted"] = True
 
 def handle_donation():
 	name = st.selectbox("שם", options=dal.get_all_people() + ["חדש"], index=None, placeholder="בחר מתפלל", key=f"name {st.session_state['purchase_key']}")
