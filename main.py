@@ -486,8 +486,8 @@ try:
 					display_dataframe(general_report)
 
 					# Download buttons
-					reports = [purchases_report, donations_report]
-					titles = ["חובות", "תרומות"]
+					reports = [purchases_report, donations_report, general_report]
+					titles = ["חובות", "תרומות", 'סה"כ']
 
 					excel_file = to_excel_with_titles(reports, titles)
 					pdf_file = to_pdf_reportlab(reports, titles)
