@@ -3,7 +3,9 @@ import pandas as pd
 import time
 import io
 import os
+import streamlit.components.v1 as components
 import data_access_layer as dal
+
 
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib import colors
@@ -352,8 +354,10 @@ def get_report_by_person(name: str, year: str):
 	yearly_donations_report = pd.concat([yearly_donations_report, separation_row, sum_row], ignore_index=True)
 	yearly_donations_report = yearly_donations_report.loc[:, ["סכום", "מספר קבלה", "מספר פנקס" ,"קבלה", "אופן תשלום", "שם", "שנה", "תאריך"]]
 
+	general_report = {"סכום" : total - yearly_donations_sum, "מספר קבלה": [""],"מספר פנקס": [""],"קבלה": [None],"אופן תשלום": ['סה"כ'], "שם": [""], "שנה": [""], "תאריך": [None]}
+	general_report = pd.DataFrame(general_report)
 
-	return (yearly_donations_report, yearly_purchases_report)
+	return (yearly_donations_report, yearly_purchases_report, general_report)
 
 def get_report_by_day(year: str, day: str):
 	report = pd.DataFrame(st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שנה"] == year) & (st.session_state["PURCHASES"]["פרשה"].str.contains(day))])
@@ -467,7 +471,7 @@ try:
 				year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
 				
 				if name != None:
-					donations_report, purchases_report = get_report_by_person(name, year)
+					donations_report, purchases_report, general_report = get_report_by_person(name, year)
 					purchases_report.drop(["שנה", "שם", "level"], axis=1, inplace=True)
 					donations_report.drop(["שנה", "שם"], axis=1, inplace=True)
 					
@@ -477,6 +481,9 @@ try:
 
 					st.write("תרומות")
 					display_dataframe(donations_report)
+
+					st.write('סה"כ')
+					components.html(general_report.to_html(header=False))
 
 
 					# Download buttons
