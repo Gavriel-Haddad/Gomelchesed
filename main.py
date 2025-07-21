@@ -550,6 +550,10 @@ try:
 					purchases_report.drop([0, len(purchases_report) - 2, len(purchases_report) - 1], axis=0, inplace=True)
 					purchases_report.drop(["level"], axis=1, inplace=True)
 
+					donations_report.drop([len(purchases_report) - 2, len(purchases_report) - 1], axis=0, inplace=True)
+
+
+
 					st.write("חובות")
 					purchases_report.insert(0, "?האם למחוק", False)
 					purchases_report.reset_index(drop=True, inplace=True)
