@@ -329,17 +329,10 @@ def get_report_by_person(name: str, year: str):
 	previous_purchases_sum = previous_purchases_report["סכום"].sum()
 	previous_donations_sum = previous_donations_report["סכום"].sum()
 	
-	yearly_total = yearly_donations_sum - yearly_purchases_sum
-	previous_total = previous_donations_sum - previous_purchases_sum
+	yearly_total = yearly_purchases_sum - yearly_donations_sum
+	previous_total = previous_purchases_sum - previous_donations_sum
 
 	total = yearly_total + previous_total
-
-	general_report = {
-		'יתרה משנה קודמת': [previous_total],
-		'תרומות שנה נוכחית': [yearly_donations_sum],
-		'חובות שנה נוכחית': [yearly_purchases_sum],
-		'סך הכל': [total],
-	}
 
 	previous_year_row = {"סכום": previous_total, "מצוה" : "", "פרשה": f"יתרה משנה קודמת", "שנה": "", "תאריך": [None], "שם": [name]}
 	previous_year_row = pd.DataFrame.from_dict(previous_year_row)
@@ -351,9 +344,8 @@ def get_report_by_person(name: str, year: str):
 	sum_row = pd.DataFrame(sum_row)
 	yearly_purchases_report = pd.concat([previous_year_row, yearly_purchases_report, separation_row, sum_row], ignore_index=True)
 
-	general_report = pd.DataFrame.from_dict(general_report)
 
-	return (general_report, yearly_donations_report, yearly_purchases_report)
+	return (yearly_donations_report, yearly_purchases_report)
 
 def get_report_by_day(year: str, day: str):
 	report = pd.DataFrame(st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שנה"] == year) & (st.session_state["PURCHASES"]["פרשה"].str.contains(day))])
@@ -467,12 +459,10 @@ try:
 				year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
 				
 				if name != None:
-					general_report, donations_report, purchases_report = get_report_by_person(name, year)
+					donations_report, purchases_report = get_report_by_person(name, year)
 					purchases_report.drop(["שנה", "שם", "level"], axis=1, inplace=True)
 					donations_report.drop(["שנה", "שם"], axis=1, inplace=True)
 					
-					st.write("סיכום")
-					display_dataframe(general_report)
 
 					st.write("חובות")
 					display_dataframe(purchases_report)
@@ -482,8 +472,8 @@ try:
 
 
 					# Download buttons
-					reports = [general_report, purchases_report, donations_report]
-					titles = ["סיכום", "חובות", "תרומות"]
+					reports = [purchases_report, donations_report]
+					titles = ["חובות", "תרומות"]
 
 					excel_file = to_excel_with_titles(reports, titles)
 					pdf_file = to_pdf_reportlab(reports, titles)
