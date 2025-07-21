@@ -551,7 +551,7 @@ try:
 				year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
 				
 				if name != None and year != None:
-					donations_report, purchases_report = get_report_by_person(name, year)
+					donations_report, purchases_report, _ = get_report_by_person(name, year)
 					purchases_report.reset_index(inplace=True, drop=True)
 					purchases_report.drop([0, len(purchases_report) - 2, len(purchases_report) - 1], axis=0, inplace=True)
 					purchases_report.drop(["level"], axis=1, inplace=True)
