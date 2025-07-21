@@ -3,7 +3,6 @@ import pandas as pd
 import time
 import io
 import os
-import streamlit.components.v1 as components
 import data_access_layer as dal
 
 
@@ -483,8 +482,7 @@ try:
 					display_dataframe(donations_report)
 
 					st.write('סה"כ')
-					components.html(general_report.to_html(header=False))
-
+					display_dataframe(general_report)
 
 					# Download buttons
 					reports = [purchases_report, donations_report]
