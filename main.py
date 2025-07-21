@@ -344,10 +344,10 @@ def get_report_by_person(name: str, year: str):
 	sum_row = pd.DataFrame(sum_row)
 	yearly_purchases_report = pd.concat([previous_year_row, yearly_purchases_report, separation_row, sum_row], ignore_index=True)
 
-	separation_row = {"מספר קבלה": [""],"מספר פנקס": [""],"קבלה": [None],"אופן תשלום": [""], "סכום" : [""], "שם": [""], "שנה": [""], "תאריך": [""]}
+	separation_row = { "סכום" : [""], "מספר קבלה": [""],"מספר פנקס": [""],"קבלה": [None],"אופן תשלום": [""],"שם": [""], "שנה": [""], "תאריך": [""]}
 	separation_row = pd.DataFrame(separation_row)
 
-	sum_row = {"מספר קבלה": [""],"מספר פנקס": [""],"קבלה": [None],"אופן תשלום": [""], "סכום" : yearly_donations_sum, "שם": [""], "שנה": [""], "תאריך": ['סה"כ']}
+	sum_row = {"סכום" : yearly_donations_sum, "מספר קבלה": [""],"מספר פנקס": [""],"קבלה": [None],"אופן תשלום": [""], "שם": [""], "שנה": [""], "תאריך": ['סה"כ']}
 	sum_row = pd.DataFrame(sum_row)
 	yearly_donations_report = pd.concat([yearly_donations_report, separation_row, sum_row], ignore_index=True)
 
