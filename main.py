@@ -353,7 +353,7 @@ def get_report_by_person(name: str, year: str):
 	yearly_donations_report = pd.concat([yearly_donations_report, separation_row, sum_row], ignore_index=True)
 	yearly_donations_report = yearly_donations_report.loc[:, ["סכום", "מספר קבלה", "מספר פנקס" ,"קבלה", "אופן תשלום", "שם", "שנה", "תאריך"]]
 
-	general_report = {"סכום" : total, "": [""],"": [""],"": [None],"": ['סה"כ'], "שם": [""], "שנה": [""], "תאריך": [datetime.today()]}
+	general_report = {"סכום" : total, "שם": [""], "שנה": [""], "תאריך": [datetime.today()]}
 	general_report = pd.DataFrame(general_report)
 
 	return (yearly_donations_report, yearly_purchases_report, general_report)
