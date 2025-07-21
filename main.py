@@ -344,6 +344,15 @@ def get_report_by_person(name: str, year: str):
 	sum_row = pd.DataFrame(sum_row)
 	yearly_purchases_report = pd.concat([previous_year_row, yearly_purchases_report, separation_row, sum_row], ignore_index=True)
 
+	st.write(yearly_donations_report.columns)
+	separation_row = {"סכום": [""], "מצוה" : [""], "פרשה": [""], "שנה": [""], "תאריך": [""]}
+	separation_row = pd.DataFrame(separation_row)
+
+	sum_row = {"סכום": yearly_donations_sum, "מצוה" : "", "פרשה": f'סה"כ', "שנה": "", "תאריך": [None]}
+	sum_row = pd.DataFrame(sum_row)
+	yearly_donations_report = pd.concat([yearly_donations_report, separation_row, sum_row], ignore_index=True)
+
+
 
 	return (yearly_donations_report, yearly_purchases_report)
 
@@ -537,7 +546,7 @@ try:
 				year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
 				
 				if name != None and year != None:
-					_, donations_report, purchases_report = get_report_by_person(name, year)
+					donations_report, purchases_report = get_report_by_person(name, year)
 					purchases_report.reset_index(inplace=True, drop=True)
 					purchases_report.drop([0, len(purchases_report) - 2, len(purchases_report) - 1], axis=0, inplace=True)
 					purchases_report.drop(["level"], axis=1, inplace=True)
