@@ -283,6 +283,7 @@ def handle_donation():
 		year = st.text_input("שנה", value=dal.get_last_yesr())
 		amount = st.number_input("סכום", step=1)
 		method = st.selectbox("אופן תשלום", options=st.session_state["PAYMENT_METHODS"])
+		notes = st.text_input("הערות", placeholder="הערות")
 		has_reciept = st.checkbox("האם ניתנה קבלה?")
 		
 		book = " "
@@ -309,7 +310,7 @@ def handle_donation():
 				donation = pd.DataFrame.from_dict(donation)
 				donation["תאריך"] = donation["תאריך"].astype("datetime64[ns]")
 				
-				dal.insert_donation(date, year, final_name, amount, method, has_reciept, book, reciept)
+				dal.insert_donation(date, year, final_name, amount, method, has_reciept, book, reciept, notes)
 
 				if name == "חדש":
 					dal.add_new_person(new_name)
@@ -345,16 +346,19 @@ def get_report_by_person(name: str, year: str):
 	sum_row = pd.DataFrame(sum_row)
 	yearly_purchases_report = pd.concat([previous_year_row, yearly_purchases_report, separation_row, sum_row], ignore_index=True)
 
-	separation_row = { "סכום" : [""], "מספר קבלה": [""],"מספר פנקס": [""],"קבלה": [None],"אופן תשלום": [""],"שם": [""], "שנה": [""], "תאריך": [None]}
+	separation_row = {"הערות": "", "סכום" : [""], "מספר קבלה": [""],"מספר פנקס": [""],"קבלה": [None],"אופן תשלום": [""],"שם": [""], "שנה": [""], "תאריך": [None]}
 	separation_row = pd.DataFrame(separation_row)
 
-	sum_row = {"סכום" : yearly_donations_sum, "מספר קבלה": [""],"מספר פנקס": [""],"קבלה": [None],"אופן תשלום": ['סה"כ'], "שם": [""], "שנה": [""], "תאריך": [None]}
+	sum_row = {"הערות": "", "סכום" : yearly_donations_sum, "מספר קבלה": [""],"מספר פנקס": [""],"קבלה": [None],"אופן תשלום": ['סה"כ'], "שם": [""], "שנה": [""], "תאריך": [None]}
 	sum_row = pd.DataFrame(sum_row)
 	yearly_donations_report = pd.concat([yearly_donations_report, separation_row, sum_row], ignore_index=True)
-	yearly_donations_report = yearly_donations_report.loc[:, ["סכום", "מספר קבלה", "מספר פנקס" ,"קבלה", "אופן תשלום", "שם", "שנה", "תאריך"]]
+	yearly_donations_report = yearly_donations_report.loc[:, ["הערות", "סכום", "מספר קבלה", "מספר פנקס" ,"קבלה", "אופן תשלום", "שם", "שנה", "תאריך"]]
 
 	general_report = {"סכום" : total, "שם": [""], "שנה": [""], "תאריך": [datetime.today()]}
 	general_report = pd.DataFrame(general_report)
+
+
+	yearly_donations_report.sort_values(by=["תאריך"], inplace=True)
 
 	return (yearly_donations_report, yearly_purchases_report, general_report)
 

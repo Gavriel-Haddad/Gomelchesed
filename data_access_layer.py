@@ -23,7 +23,12 @@ def load_payment_methods():
 
 def load_donations():
     engine = st.session_state["engine"]
-    st.session_state["DONATIONS"] = pd.read_sql("donations", engine.connect())
+    data = pd.read_sql("donations", engine.connect())
+
+    new_order = ["תאריך", "שנה", "שם", "סכום", "אופן תשלום", "קבלה", "מספר פנקס", "מספר קבלה", "הערות"]
+    data = data[new_order]
+
+    st.session_state["DONATIONS"] = data
 
 def load_purchases():
     engine = st.session_state["engine"]
@@ -96,7 +101,7 @@ def insert_purchase(date, year, day, name, amount, mitsva):
 
     load_purchases()
 
-def insert_donation(date, year, name, amount, method, has_reciept, book_number, reciept_number):
+def insert_donation(date, year, name, amount, method, has_reciept, book_number, reciept_number, notes):
     if not date \
         or not year \
         or not name \
@@ -106,9 +111,9 @@ def insert_donation(date, year, name, amount, method, has_reciept, book_number, 
 
 
     query = f"""
-        insert into donations (תאריך, שנה, שם, סכום, "אופן תשלום", קבלה, "מספר פנקס", "מספר קבלה")
+        insert into donations (תאריך, שנה, שם, סכום, "אופן תשלום", קבלה, "מספר פנקס", "מספר קבלה",הערות)
 		VALUES
-		('{date}', '{year}', '{name}', {amount}, '{method}', {has_reciept}, '{book_number}', '{reciept_number}')
+		('{date}', '{year}', '{name}', {amount}, '{method}', {has_reciept}, '{book_number}', '{reciept_number}', '{notes}')
     """
     
     with st.session_state["engine"].begin() as con:
