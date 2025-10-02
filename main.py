@@ -239,32 +239,40 @@ def handle_reciepts():
 def handle_purchase():
 	date = st.date_input("תאריך", format="DD.MM.YYYY", value=None)
 	year = st.text_input("שנה", value=dal.get_last_yesr())
+	
 	day = st.selectbox("פרשה", options=dal.get_all_days() + ["חדש"], index=None, placeholder="בחר פרשה")
-
 	if day == "חדש":
 		new_day = st.text_input("פרשה", placeholder="פרשה חדשה", key=f"new_day {st.session_state['purchase_key']}")
 	else:
 		new_day = ""  # to keep variable defined
 
-	mitsva = st.selectbox("מצוה", options=st.session_state["MITZVOT"], index=None, key=f"mitsva {st.session_state['purchase_key']}", label_visibility='collapsed')
-	name = st.selectbox("שם", options=dal.get_all_people() + ["חדש"], index=None, placeholder="בחר מתפלל", key=f"name {st.session_state['purchase_key']}")
+	mitsva = st.selectbox("מצוה", options=st.session_state["MITZVOT"] + ["חדש"], index=None, key=f"mitsva {st.session_state['purchase_key']}", label_visibility='collapsed')
+	if mitsva == "חדש":
+		new_mitsva = st.text_input("מצוה", placeholder="מצוה חדשה", key=f"new_mitsva {st.session_state['purchase_key']}")
+	else:
+		new_mitsva = ""  # to keep variable defined
 
+	name = st.selectbox("שם", options=dal.get_all_people() + ["חדש"], index=None, placeholder="בחר מתפלל", key=f"name {st.session_state['purchase_key']}")
 	if name == "חדש":
 		new_name = st.text_input("שם", placeholder="מתפלל חדש", key=f"new_name {st.session_state['purchase_key']}")
 	else:
 		new_name = ""  # to keep variable defined
 
 	amount = st.number_input("סכום", step=1, key=f"amount {st.session_state['purchase_key']}")
+	notes = st.text_input("הערות", placeholder="הערות", key=f"notes {st.session_state['purchase_key']}")
 
 	if st.button("שמור"):
 		with st.spinner("שומר..."):
 			final_day = day if day != "חדש" else new_day
+			final_mitsva = mitsva if mitsva != "חדש" else new_mitsva
 			final_name = name if name != "חדש" else new_name
 
-			dal.insert_purchase(date, year, final_day, final_name, amount, mitsva)
+			dal.insert_purchase(date, year, final_day, final_name, amount, final_mitsva, notes)
 
 			if day == "חדש":
 				dal.add_new_day(new_day)
+			if mitsva == "חדש":
+				dal.add_new_mitsva(new_mitsva)
 			if name == "חדש":
 				dal.add_new_person(new_name)
 
@@ -360,6 +368,11 @@ def get_report_by_person(name: str, year: str):
 
 	yearly_donations_report.sort_values(by=["תאריך"], inplace=True)
 
+	purchases_columns = yearly_purchases_report.columns
+	reordered_purchases_columns = ["הערות"] + [col for col in purchases_columns if col != "הערות"]
+	yearly_purchases_report = yearly_purchases_report[reordered_purchases_columns]
+
+
 	return (yearly_donations_report, yearly_purchases_report, general_report)
 
 def get_report_by_day(year: str, day: str):
@@ -373,13 +386,17 @@ def get_report_by_day(year: str, day: str):
 
 	total = report["סכום"].sum()
 
-	separation_row = ["", "", "", "", "", "", ""]
+	separation_row = ["", "", "", "", "", "", "", ""]
 	separation_row = pd.DataFrame([separation_row], columns=report.columns[-1::-1])
 
-	total_row = ["","","", "", 'סה"כ', "", total]
+	total_row = ["","","","", "", 'סה"כ', "", total]
 	total_row = pd.DataFrame([total_row], columns=report.columns[-1::-1])
 
 	report = pd.concat([report, separation_row, total_row])
+
+	columns = report.columns
+	reordered_columns = ["הערות"] + [col for col in columns if col != "הערות"]
+	report = report[reordered_columns]
 	
 	return (report, message)
 

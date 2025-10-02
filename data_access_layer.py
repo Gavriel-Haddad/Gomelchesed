@@ -25,8 +25,8 @@ def load_donations():
     engine = st.session_state["engine"]
     data = pd.read_sql("donations", engine.connect())
 
-    new_order = ["תאריך", "שנה", "שם", "סכום", "אופן תשלום", "קבלה", "מספר פנקס", "מספר קבלה", "הערות"]
-    data = data[new_order]
+    new_column_order = ["תאריך", "שנה", "שם", "סכום", "אופן תשלום", "קבלה", "מספר פנקס", "מספר קבלה", "הערות"]
+    data = data[new_column_order]
 
     st.session_state["DONATIONS"] = data
 
@@ -77,7 +77,10 @@ def get_all_donations(reciepted):
 	else:
 		return st.session_state["DONATIONS"][~st.session_state["DONATIONS"]["קבלה"]]
 
-def insert_purchase(date, year, day, name, amount, mitsva):
+
+
+
+def insert_purchase(date, year, day, name, amount, mitsva, notes):
     if not date:
         raise Exception("תאריך חסר")
     if not year:
@@ -91,9 +94,9 @@ def insert_purchase(date, year, day, name, amount, mitsva):
 
     
     query = f"""
-        INSERT INTO purchases (תאריך, שנה, פרשה, שם, סכום, מצוה)
+        INSERT INTO purchases (הערות, תאריך, שנה, פרשה, שם, סכום, מצוה)
         VALUES
-        ('{date}', '{year}', '{day}', '{name}', {amount}, '{mitsva}')
+        ('{notes}', '{date}', '{year}', '{day}', '{name}', {amount}, '{mitsva}')
     """
 
     with st.session_state["engine"].begin() as con:
@@ -105,8 +108,7 @@ def insert_donation(date, year, name, amount, method, has_reciept, book_number, 
     if not date \
         or not year \
         or not name \
-        or not method \
-        or amount == 0:
+        or not method:
           raise Exception("מידע חסר")
 
 
@@ -126,11 +128,10 @@ def mark_reciepts(data: pd.DataFrame):
         or data["שנה"].hasnans \
         or data["שם"].hasnans \
         or data["אופן תשלום"].hasnans \
-        or data["קבלה"].hasnans \
-        or 0 in list(data["סכום"].values.tolist()):
+        or data["קבלה"].hasnans:
           raise Exception("מידע חסר")
     
-    data.to_sql("donations", st.session_state["engine"].connect(), if_exists='replace')
+    data.to_sql("donations", st.session_state["engine"].connect(), if_exists='replace', index=False)
     load_donations()
 
 def add_new_person(name: str):
@@ -155,13 +156,24 @@ def add_new_day(day: str):
 
     load_days()
 
+def add_new_mitsva(mitsva: str):
+    if not mitsva:
+        raise Exception("מצוה חסרה")
+    
+    query = f"insert into mitsvot VALUES ('{mitsva}', NULL)"
+	
+    with st.session_state["engine"].begin() as con:
+        con.execute(sa.text(query))    
+
+    load_mitzvot()
+
+
 def update_person_data(name: str, year, new_purchases: pd.DataFrame, new_donations: pd.DataFrame):
     if new_donations["תאריך"].hasnans \
         or new_donations["שנה"].hasnans \
         or new_donations["שם"].hasnans \
         or new_donations["אופן תשלום"].hasnans \
-        or new_donations["קבלה"].hasnans \
-        or 0 in list(new_donations["סכום"].values.tolist()):
+        or new_donations["קבלה"].hasnans:
           raise Exception("מידע חסר")
     
     if new_purchases["תאריך"].hasnans \
@@ -196,8 +208,7 @@ def update_day_data(year: str, day: str, new_day: pd.DataFrame):
         or new_day["שנה"].hasnans \
         or new_day["שם"].hasnans \
         or new_day["פרשה"].hasnans \
-        or new_day["מצוה"].hasnans \
-        or 0 in new_day["סכום"].values.tolist():
+        or new_day["מצוה"].hasnans:
           raise Exception("מידע חסר")
 
     query = f"""
