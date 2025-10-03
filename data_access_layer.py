@@ -39,7 +39,7 @@ def load_purchases():
                                     """), engine.connect())
 
 def load_db():
-    st.session_state["engine"] = sa.create_engine(st.secrets["postgres"]["db_url"], pool_pre_ping=True))
+    st.session_state["engine"] = sa.create_engine(st.secrets["postgres"]["db_url"], pool_pre_ping=True)
 
     load_days()
     load_mitzvot()
