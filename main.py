@@ -437,7 +437,7 @@ try:
 		not st.session_state["logged in"]:
 		with st.form("login form"):
 			username = st.text_input("שם משתמש")
-			password = st.text_input("סיסמא")
+			password = st.text_input("סיסמא", type="password")
 			
 			if st.form_submit_button("login"):
 				if username == st.secrets["credentials"]["username"] and \
