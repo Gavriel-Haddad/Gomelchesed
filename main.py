@@ -356,9 +356,11 @@ def get_report_by_person(name: str, year: str):
 	reordered_purchases_columns = ["הערות"] + [col for col in purchases_columns if col != "הערות"]
 	yearly_purchases_report = yearly_purchases_report[reordered_purchases_columns]
 
+	st.write(yearly_purchases_report.dtypes)
+	yearly_purchases_report["תאריך"] = yearly_purchases_report["תאריך"].astype("datetime64[ns]")
+	st.write(yearly_purchases_report.dtypes)
 	yearly_donations_report.sort_values(by=["תאריך"], inplace=True)
 	yearly_purchases_report.sort_values(by=["תאריך"], inplace=True)
-	st.write(yearly_purchases_report.dtypes)
 
 	return (yearly_donations_report, yearly_purchases_report, general_report)
 
