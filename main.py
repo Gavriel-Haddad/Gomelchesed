@@ -366,12 +366,13 @@ def get_report_by_person(name: str, year: str):
 	general_report = pd.DataFrame(general_report)
 
 
-	yearly_donations_report.sort_values(by=["תאריך"], inplace=True)
 
 	purchases_columns = yearly_purchases_report.columns
 	reordered_purchases_columns = ["הערות"] + [col for col in purchases_columns if col != "הערות"]
 	yearly_purchases_report = yearly_purchases_report[reordered_purchases_columns]
 
+	yearly_donations_report.sort_values(by=["תאריך"], inplace=True)
+	yearly_purchases_report.sort_values(by=["תאריך"], inplace=True)
 
 	return (yearly_donations_report, yearly_purchases_report, general_report)
 
