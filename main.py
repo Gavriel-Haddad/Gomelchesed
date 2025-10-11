@@ -304,19 +304,6 @@ def handle_donation():
 		if st.button("שמור"):
 			with st.spinner("שומר..."):
 				final_name = name if name != "חדש" else new_name
-				donation = {
-					"תאריך" : [date],
-					"שנה" : [year],
-					"שם" : [final_name],
-					"סכום" : [amount],
-					"אופן תשלום": [method],
-					"קבלה" : [has_reciept],
-					"מספר פנקס" : [book],
-					"מספר קבלה" : [reciept],
-				}
-
-				donation = pd.DataFrame.from_dict(donation)
-				donation["תאריך"] = donation["תאריך"].astype("datetime64[ns]")
 				
 				dal.insert_donation(date, year, final_name, amount, method, has_reciept, book, reciept, notes)
 
@@ -365,14 +352,13 @@ def get_report_by_person(name: str, year: str):
 	general_report = {"סכום" : total, "שם": [""], "שנה": [""], "תאריך": [datetime.today()]}
 	general_report = pd.DataFrame(general_report)
 
-
-
 	purchases_columns = yearly_purchases_report.columns
 	reordered_purchases_columns = ["הערות"] + [col for col in purchases_columns if col != "הערות"]
 	yearly_purchases_report = yearly_purchases_report[reordered_purchases_columns]
 
 	yearly_donations_report.sort_values(by=["תאריך"], inplace=True)
 	yearly_purchases_report.sort_values(by=["תאריך"], inplace=True)
+	st.write(yearly_purchases_report.dtypes)
 
 	return (yearly_donations_report, yearly_purchases_report, general_report)
 
