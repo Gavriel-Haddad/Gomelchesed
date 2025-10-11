@@ -317,6 +317,8 @@ def handle_donation():
 def get_report_by_person(name: str, year: str):
 	yearly_purchases_report = st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שם"] == name) & (st.session_state["PURCHASES"]["שנה"] == year)]
 	yearly_donations_report = st.session_state["DONATIONS"][(st.session_state["DONATIONS"]["שם"] == name) & (st.session_state["DONATIONS"]["שנה"] == year)]
+	yearly_purchases_report["תאריך"] = yearly_purchases_report["תאריך"].astype("datetime64[ns]")
+	yearly_donations_report["תאריך"] = yearly_donations_report["תאריך"].astype("datetime64[ns]")
 
 	previous_purchases_report = st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שם"] == name) & (st.session_state["PURCHASES"]["שנה"] < year)]
 	previous_donations_report = st.session_state["DONATIONS"][(st.session_state["DONATIONS"]["שם"] == name) & (st.session_state["DONATIONS"]["שנה"] < year)]
@@ -356,8 +358,6 @@ def get_report_by_person(name: str, year: str):
 	reordered_purchases_columns = ["הערות"] + [col for col in purchases_columns if col != "הערות"]
 	yearly_purchases_report = yearly_purchases_report[reordered_purchases_columns]
 
-	yearly_purchases_report["תאריך"] = yearly_purchases_report["תאריך"].astype("datetime64[ns]")
-	yearly_donations_report["תאריך"] = yearly_donations_report["תאריך"].astype("datetime64[ns]")
 
 	yearly_donations_report.sort_values(by=["תאריך"], inplace=True)
 	yearly_purchases_report.sort_values(by=["תאריך"], inplace=True)
