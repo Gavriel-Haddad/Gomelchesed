@@ -267,7 +267,6 @@ def handle_purchase():
 			final_mitsva = mitsva if mitsva != "חדש" else new_mitsva
 			final_name = name if name != "חדש" else new_name
 
-			dal.insert_purchase(date, year, final_day, final_name, amount, final_mitsva, notes)
 
 			if day == "חדש":
 				dal.add_new_day(new_day)
@@ -275,6 +274,8 @@ def handle_purchase():
 				dal.add_new_mitsva(new_mitsva)
 			if name == "חדש":
 				dal.add_new_person(new_name)
+
+			dal.insert_purchase(date, year, final_day, final_name, amount, final_mitsva, notes)
 
 			st.session_state["purchase_submitted"] = True
 
@@ -305,11 +306,12 @@ def handle_donation():
 			with st.spinner("שומר..."):
 				final_name = name if name != "חדש" else new_name
 				
-				dal.insert_donation(date, year, final_name, amount, method, has_reciept, book, reciept, notes)
 
 				if name == "חדש":
 					dal.add_new_person(new_name)
 
+				dal.insert_donation(date, year, final_name, amount, method, has_reciept, book, reciept, notes)
+				
 				st.session_state["donation_submitted"] = True
 
 
