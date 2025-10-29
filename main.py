@@ -76,11 +76,23 @@ def display_dataframe(data: pd.DataFrame):
 		hide_index=True)
 
 
+def clean_nulls(data: pd.DataFrame):
+	for col in data.columns:
+		if "סכום" in col or "מספר" in col:
+			data[col] = data[col].astype('Int64', errors='ignore')
+		else:
+			data[col] = data[col].astype('str')
+			data[col] = data[col].apply(lambda x: "" if x in ["None", "NaT", "nan"] else x)
+
+	return data
+
 def to_excel_with_titles(dfs: list[pd.DataFrame], titles):
 	dfs = [df[df.columns[::-1]] for df in dfs]
 	for df in dfs:
-		for col in df.select_dtypes(include=['datetime64[ns]', 'datetime64[ns, UTC]', 'object']):
-			df[col] = df[col].astype('str')
+		df = clean_nulls(df)
+		
+		df["תאריך"] = pd.to_datetime(df["תאריך"], errors='coerce').dt.strftime("%d/%m/%Y")
+		df.drop("קבלה", axis=1, inplace=True, errors='ignore')
 	
 	output = io.BytesIO()
 	with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
@@ -426,21 +438,21 @@ def get_general_report():
 
 
 try:
-	if not "logged in" in st.session_state or \
-		not st.session_state["logged in"]:
-		with st.form("login form"):
-			username = st.text_input("שם משתמש")
-			password = st.text_input("סיסמא", type="password")
+	# if not "logged in" in st.session_state or \
+	# 	not st.session_state["logged in"]:
+	# 	with st.form("login form"):
+	# 		username = st.text_input("שם משתמש")
+	# 		password = st.text_input("סיסמא", type="password")
 			
-			if st.form_submit_button("login"):
-				if username == st.secrets["credentials"]["username"] and \
-					password == st.secrets["credentials"]["password"]:
-					st.session_state["logged in"] = True
-					st.rerun()
-				else:
-					st.error("כניסה נכשלה, אנא נסה שוב.")
+	# 		if st.form_submit_button("login"):
+	# 			if username == st.secrets["credentials"]["username"] and \
+	# 				password == st.secrets["credentials"]["password"]:
+	# 				st.session_state["logged in"] = True
+	# 				st.rerun()
+	# 			else:
+	# 				st.error("כניסה נכשלה, אנא נסה שוב.")
 
-		st.stop()
+	# 	st.stop()
 
 	if "purchase_key" not in st.session_state:
 		st.session_state["purchase_key"] = 0

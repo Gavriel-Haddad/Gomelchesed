@@ -1,8 +1,7 @@
 import streamlit as st
 import sqlalchemy as sa
 import pandas as pd
-
-
+from datetime import datetime
 
 
 def load_days():
@@ -39,7 +38,9 @@ def load_purchases():
                                     """), engine.connect())
 
 def load_db():
-    st.session_state["engine"] = sa.create_engine(st.secrets["postgres"]["db_url"], pool_pre_ping=True)
+    # st.session_state["engine"] = sa.create_engine(st.secrets["postgres"]["db_url"], pool_pre_ping=True)
+    cs = r'postgresql://Gomelchesed_owner:npg_Bz0SUtTPgkv1@ep-spring-river-a20x0ye0-pooler.eu-central-1.aws.neon.tech/Gomelchesed?sslmode=require&channel_binding=require'
+    st.session_state["engine"] = sa.create_engine(cs, pool_pre_ping=True)
 
     load_days()
     load_mitzvot()
@@ -79,6 +80,19 @@ def get_all_donations(reciepted):
 
 
 
+def execute_query(query: str):
+    # log the query (query, and datetime it was made) and execute it
+    engine = st.session_state["engine"]
+
+    log_query = f"""
+        insert into logs (log, date)
+        values ('{query.replace("'", "''")}', '{datetime.now()}')
+    """
+
+    with engine.begin() as con:
+        con.execute(sa.text(query))
+        con.execute(sa.text(log_query))
+
 def insert_purchase(date, year, day, name, amount, mitsva, notes):
     if not date:
         raise Exception("תאריך חסר")
@@ -98,9 +112,7 @@ def insert_purchase(date, year, day, name, amount, mitsva, notes):
         ('{notes}', '{date}', '{year}', '{day}', '{name}', {amount}, '{mitsva}')
     """
 
-    with st.session_state["engine"].begin() as con:
-        con.execute(sa.text(query))
-
+    execute_query(query)
     load_purchases()
 
 def insert_donation(date, year, name, amount, method, has_reciept, book_number, reciept_number, notes):
@@ -117,10 +129,38 @@ def insert_donation(date, year, name, amount, method, has_reciept, book_number, 
 		('{date}', '{year}', '{name}', {amount}, '{method}', {has_reciept}, '{book_number}', '{reciept_number}', '{notes}')
     """
     
-    with st.session_state["engine"].begin() as con:
-        con.execute(sa.text(query))
+    execute_query(query)
     
     load_donations()
+
+def add_new_person(name: str):
+    if not name:
+          raise Exception("שם חסר")
+    
+    query = f"insert into people VALUES ('{name}')"
+	
+    execute_query(query)
+
+    load_people()
+
+def add_new_day(day: str):
+    if not day:
+        raise Exception("שם חסר")
+    
+    query = f"insert into days VALUES ('{day}')"
+	
+    execute_query(query)
+    load_days()
+
+def add_new_mitsva(mitsva: str):
+    if not mitsva:
+        raise Exception("מצוה חסרה")
+    
+    query = f"insert into mitsvot VALUES ('{mitsva}', NULL)"
+	
+    execute_query(query)
+    load_mitzvot()
+
 
 def mark_reciepts(data: pd.DataFrame):
     if data["תאריך"].hasnans \
@@ -132,40 +172,6 @@ def mark_reciepts(data: pd.DataFrame):
     
     data.to_sql("donations", st.session_state["engine"].connect(), if_exists='replace', index=False)
     load_donations()
-
-def add_new_person(name: str):
-    if not name:
-          raise Exception("שם חסר")
-    
-    query = f"insert into people VALUES ('{name}')"
-	
-    with st.session_state["engine"].begin() as con:
-        con.execute(sa.text(query))    
-
-    load_people()
-
-def add_new_day(day: str):
-    if not day:
-        raise Exception("שם חסר")
-    
-    query = f"insert into days VALUES ('{day}')"
-	
-    with st.session_state["engine"].begin() as con:
-        con.execute(sa.text(query))    
-
-    load_days()
-
-def add_new_mitsva(mitsva: str):
-    if not mitsva:
-        raise Exception("מצוה חסרה")
-    
-    query = f"insert into mitsvot VALUES ('{mitsva}', NULL)"
-	
-    with st.session_state["engine"].begin() as con:
-        con.execute(sa.text(query))    
-
-    load_mitzvot()
-
 
 def update_person_data(name: str, year, new_purchases: pd.DataFrame, new_donations: pd.DataFrame):
     if new_donations["תאריך"].hasnans \
@@ -193,9 +199,7 @@ def update_person_data(name: str, year, new_purchases: pd.DataFrame, new_donatio
             and "שנה" = '{year}';
         """
     
-    with st.session_state["engine"].begin() as con:
-        con.execute(sa.text(query))
-    
+    execute_query(query)
     new_purchases.to_sql("purchases", st.session_state["engine"].connect(), if_exists='append', index=False)
     new_donations.to_sql("donations", st.session_state["engine"].connect(), if_exists='append', index=False)
 
@@ -216,10 +220,9 @@ def update_day_data(year: str, day: str, new_day: pd.DataFrame):
             and "שנה" = '{year}';
         """
     
-    with st.session_state["engine"].begin() as con:
-        con.execute(sa.text(query))
-    
+    execute_query(query)
     new_day.to_sql("purchases", st.session_state["engine"].connect(), if_exists='append', index=False)
+
     load_purchases()
       
 
