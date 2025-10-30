@@ -438,21 +438,21 @@ def get_general_report():
 
 
 try:
-	# if not "logged in" in st.session_state or \
-	# 	not st.session_state["logged in"]:
-	# 	with st.form("login form"):
-	# 		username = st.text_input("שם משתמש")
-	# 		password = st.text_input("סיסמא", type="password")
+	if not "logged in" in st.session_state or \
+		not st.session_state["logged in"]:
+		with st.form("login form"):
+			username = st.text_input("שם משתמש")
+			password = st.text_input("סיסמא", type="password")
 			
-	# 		if st.form_submit_button("login"):
-	# 			if username == st.secrets["credentials"]["username"] and \
-	# 				password == st.secrets["credentials"]["password"]:
-	# 				st.session_state["logged in"] = True
-	# 				st.rerun()
-	# 			else:
-	# 				st.error("כניסה נכשלה, אנא נסה שוב.")
+			if st.form_submit_button("login"):
+				if username == st.secrets["credentials"]["username"] and \
+					password == st.secrets["credentials"]["password"]:
+					st.session_state["logged in"] = True
+					st.rerun()
+				else:
+					st.error("כניסה נכשלה, אנא נסה שוב.")
 
-	# 	st.stop()
+		st.stop()
 
 	if "purchase_key" not in st.session_state:
 		st.session_state["purchase_key"] = 0

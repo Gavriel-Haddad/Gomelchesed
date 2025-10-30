@@ -38,9 +38,7 @@ def load_purchases():
                                     """), engine.connect())
 
 def load_db():
-    # st.session_state["engine"] = sa.create_engine(st.secrets["postgres"]["db_url"], pool_pre_ping=True)
-    cs = r'postgresql://Gomelchesed_owner:npg_Bz0SUtTPgkv1@ep-spring-river-a20x0ye0-pooler.eu-central-1.aws.neon.tech/Gomelchesed?sslmode=require&channel_binding=require'
-    st.session_state["engine"] = sa.create_engine(cs, pool_pre_ping=True)
+    st.session_state["engine"] = sa.create_engine(st.secrets["postgres"]["db_url"], pool_pre_ping=True)
 
     load_days()
     load_mitzvot()
