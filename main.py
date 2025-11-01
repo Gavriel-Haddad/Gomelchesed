@@ -91,7 +91,8 @@ def to_excel_with_titles(dfs: list[pd.DataFrame], titles):
 	for df in dfs:
 		df = clean_nulls(df)
 		
-		df["תאריך"] = pd.to_datetime(df["תאריך"], errors='coerce').dt.strftime("%d/%m/%Y")
+		if 'תאריך' in df.columns:
+			df["תאריך"] = pd.to_datetime(df["תאריך"], errors='coerce').dt.strftime("%d/%m/%Y")
 		df.drop("קבלה", axis=1, inplace=True, errors='ignore')
 	
 	output = io.BytesIO()
