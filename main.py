@@ -64,12 +64,12 @@ html, body, [data-testid="stAppViewContainer"] {
     text-align: right;
 }
 
-/* Sidebar fixed width = 400px */
+/* Sidebar fixed width = 350px */
 [data-testid="stSidebar"], 
 [data-testid="stSidebar"] > div {
-    width: 400px !important;
-    min-width: 400px !important;
-    max-width: 400px !important;
+    width: 350px !important;
+    min-width: 350px !important;
+    max-width: 350px !important;
 }
 </style>
 """, unsafe_allow_html=True)
