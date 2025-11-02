@@ -27,26 +27,49 @@ html, body, [data-testid="stAppViewContainer"] {
     direction: rtl;
     unicode-bidi: bidi-override;
     text-align: right;
-	font-size: 25px
+    font-size: 25px
 }
-			
+
 /* Apply font size to labels */
 .stTextInput label, .stTextArea label, .stNumberInput label, 
 .stSelectbox label, .stMultiselect label, .stCheckbox label, 
 .stRadio label {
-	font-size: 25px;  /* Adjust this value as needed */
+    font-size: 25px;  /* Adjust this value as needed */
 }
 
 /* Apply font size to dataframes */
 .stDataFrame, .stTable {
-	font-size: 15px;  /* Adjust this value as needed */
+    font-size: 15px;  /* Adjust this value as needed */
 }
-			
+
 .streamlit-expanderHeader, .stTextInput > label, .stTextArea > label, .stNumberInput > label, 
 .stSelectbox > label, .stMultiselect > label, .stCheckbox > label, .stRadio > label {
-	text-decoration: underline;
-	margin-bottom: 6px;
-	display: block;
+    text-decoration: underline;
+    margin-bottom: 6px;
+    display: block;
+}
+
+/* === Only changes below: keep layout LTR so sidebar renders on the left === */
+[data-testid="stAppViewContainer"] { 
+    direction: ltr !important; /* layout flow only */
+}
+
+/* Keep all visible content RTL (unchanged look & feel) */
+[data-testid="stMain"],
+[data-testid="stHeader"],
+[data-testid="stToolbar"],
+[data-testid="stSidebar"] {
+    direction: rtl;
+    unicode-bidi: bidi-override;
+    text-align: right;
+}
+
+/* Sidebar fixed width = 300px */
+[data-testid="stSidebar"], 
+[data-testid="stSidebar"] > div {
+    width: 300px !important;
+    min-width: 300px !important;
+    max-width: 300px !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -473,7 +496,7 @@ try:
 
 	actions = ["למלא דוח שבועי", "לתעד תרומה", "להוציא קבלות", "להוציא דוח", "לעשות תיקון"]
 	action = st.sidebar.selectbox("מה תרצה לעשות?", options=actions, index=None, placeholder="בחר אפשרות")#, key=st.session_state["purchase_key"])
-
+	
 	if action != None:
 		if action == "למלא דוח שבועי":
 			try:
