@@ -70,6 +70,7 @@ html, body, [data-testid="stAppViewContainer"] {
     width: 350px !important;
     min-width: 350px !important;
     max-width: 350px !important;
+	font-size: 15px !important;
 }
 </style>
 """, unsafe_allow_html=True)
