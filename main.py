@@ -472,7 +472,7 @@ try:
 
 
 	actions = ["למלא דוח שבועי", "לתעד תרומה", "להוציא קבלות", "להוציא דוח", "לעשות תיקון"]
-	action = st.selectbox("מה תרצה לעשות?", options=actions, index=None, placeholder="בחר אפשרות")#, key=st.session_state["purchase_key"])
+	action = st.sidebar.selectbox("מה תרצה לעשות?", options=actions, index=None, placeholder="בחר אפשרות")#, key=st.session_state["purchase_key"])
 
 	if action != None:
 		if action == "למלא דוח שבועי":
