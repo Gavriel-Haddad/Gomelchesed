@@ -49,12 +49,12 @@ html, body, [data-testid="stAppViewContainer"] {
     display: block;
 }
 
-/* === Only changes below: keep layout LTR so sidebar renders on the left === */
+/* === Keep layout LTR so sidebar renders on the left === */
 [data-testid="stAppViewContainer"] { 
     direction: ltr !important; /* layout flow only */
 }
 
-/* Keep all visible content RTL (unchanged look & feel) */
+/* Keep visible content RTL (unchanged look & feel) */
 [data-testid="stMain"],
 [data-testid="stHeader"],
 [data-testid="stToolbar"],
@@ -64,15 +64,39 @@ html, body, [data-testid="stAppViewContainer"] {
     text-align: right;
 }
 
-/* Sidebar fixed width = 250px */
-[data-testid="stSidebar"], 
+/* Sidebar fixed width = 200px */
+[data-testid="stSidebar"],
 [data-testid="stSidebar"] > div {
-    width: 250px !important;
-    min-width: 250px !important;
-    max-width: 250px !important;
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+}
+
+/* ===== Sidebar-specific font sizes ===== */
+[data-testid="stSidebar"] {
+    font-size: 20px !important;              /* base text in sidebar */
+}
+
+/* Sidebar labels */
+[data-testid="stSidebar"] .stTextInput label,
+[data-testid="stSidebar"] .stTextArea label,
+[data-testid="stSidebar"] .stNumberInput label,
+[data-testid="stSidebar"] .stSelectbox label,
+[data-testid="stSidebar"] .stMultiselect label,
+[data-testid="stSidebar"] .stCheckbox label,
+[data-testid="stSidebar"] .stRadio label,
+[data-testid="stSidebar"] .streamlit-expanderHeader {
+    font-size: 20px !important;              /* label size in sidebar */
+}
+
+/* Sidebar tables/dataframes (if any) */
+[data-testid="stSidebar"] .stDataFrame,
+[data-testid="stSidebar"] .stTable {
+    font-size: 14px !important;
 }
 </style>
 """, unsafe_allow_html=True)
+
 
 if "css_injected" not in st.session_state:
     st.session_state.css_injected = True
