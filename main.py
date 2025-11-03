@@ -292,7 +292,7 @@ def handle_reciepts():
 		u_data = st.data_editor(u_data, disabled=uneditables, column_config={
 			"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
 		},
-		use_container_width=True
+		use_container_width=True,
 		hide_index=True)
 
 		if st.button("שמור"):
