@@ -67,9 +67,9 @@ html, body, [data-testid="stAppViewContainer"] {
 /* Sidebar fixed width = 300px */
 [data-testid="stSidebar"], 
 [data-testid="stSidebar"] > div {
-    width: 200px !important;
-    min-width: 200px !important;
-    max-width: 200px !important;
+    width: 300px !important;
+    min-width: 300px !important;
+    max-width: 300px !important;
 }
 </style>
 """, unsafe_allow_html=True)
