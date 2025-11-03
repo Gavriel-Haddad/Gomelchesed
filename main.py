@@ -234,6 +234,7 @@ def handle_reciepts():
 	if len(u_data) > 0:
 		u_data["מספר פנקס"] = u_data["מספר פנקס"].astype(str)
 		u_data["מספר קבלה"] = u_data["מספר קבלה"].astype(str)
+		u_data = u_data[u_data["אופן תשלום"] != "הוראת קבע"]
 
 		uneditables = u_data.columns.tolist()
 		uneditables.remove("קבלה")
