@@ -228,6 +228,9 @@ def handle_reciepts():
 	u_data = dal.get_all_donations(reciepted=False)
 	r_data = dal.get_all_donations(reciepted=True)
 
+	u_data = u_data[u_data.columns[::-1]]
+	r_data = r_data[r_data.columns[::-1]]
+
 	if len(u_data) > 0:
 		u_data["מספר פנקס"] = u_data["מספר פנקס"].astype(str)
 		u_data["מספר קבלה"] = u_data["מספר קבלה"].astype(str)
