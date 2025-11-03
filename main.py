@@ -110,7 +110,7 @@ def display_text_in_center(text):
 		""", unsafe_allow_html=True)
 
 def display_dataframe(data: pd.DataFrame):
-	cols = st.columns([1.5,5,1.5])
+	cols = st.columns([0.75,5,0.75])
 	with cols[1]:
 		st.dataframe(data, use_container_width=True, column_config={
 			"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
