@@ -241,6 +241,7 @@ def handle_reciepts():
 		uneditables.remove("מספר פנקס")
 		uneditables.remove("מספר קבלה")
 
+		st.write(f"יש להוציא קבלות על {len(u_data)} תרומות:")
 		u_data = st.data_editor(u_data, disabled=uneditables, column_config={
 			"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
 		},
