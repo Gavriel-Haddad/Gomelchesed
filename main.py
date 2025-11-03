@@ -64,12 +64,12 @@ html, body, [data-testid="stAppViewContainer"] {
     text-align: right;
 }
 
-/* Sidebar fixed width = 270px */
+/* Sidebar fixed width = 280px */
 [data-testid="stSidebar"],
 [data-testid="stSidebar"] > div {
-    width: 270px !important;
-    min-width: 270px !important;
-    max-width: 270px !important;
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
 }
 
 /* ===== Sidebar-specific font sizes ===== */
