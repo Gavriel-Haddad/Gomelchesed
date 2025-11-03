@@ -67,9 +67,9 @@ html, body, [data-testid="stAppViewContainer"] {
 /* Sidebar fixed width = 300px */
 [data-testid="stSidebar"], 
 [data-testid="stSidebar"] > div {
-    width: 300px !important;
-    min-width: 300px !important;
-    max-width: 300px !important;
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -500,7 +500,7 @@ try:
 
 
 	actions = ["למלא דוח שבועי", "לתעד תרומה", "להוציא קבלות", "להוציא דוח", "לעשות תיקון"]
-	action = st.sidebar.selectbox("מה תרצה לעשות?", options=actions, index=None, placeholder="בחר אפשרות")#, key=st.session_state["purchase_key"])
+	action = st.sidebar.radio("מה תרצה לעשות?", options=actions)#, key=st.session_state["purchase_key"])
 
 	if action != None:
 		if action == "למלא דוח שבועי":
