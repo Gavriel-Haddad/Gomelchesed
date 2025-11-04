@@ -49,20 +49,20 @@ html, body, [data-testid="stAppViewContainer"] {
     display: block;
 }
 
-/* === Keep layout LTR so sidebar renders on the left === */
-[data-testid="stAppViewContainer"] { 
-    direction: ltr !important; /* layout flow only */
-}
+# /* === Keep layout LTR so sidebar renders on the left === */
+# [data-testid="stAppViewContainer"] { 
+#     direction: ltr !important; /* layout flow only */
+# }
 
-/* Keep visible content RTL (unchanged look & feel) */
-[data-testid="stMain"],
-[data-testid="stHeader"],
-[data-testid="stToolbar"],
-[data-testid="stSidebar"] {
-    direction: rtl;
-    unicode-bidi: bidi-override;
-    text-align: right;
-}
+# /* Keep visible content RTL (unchanged look & feel) */
+# [data-testid="stMain"],
+# [data-testid="stHeader"],
+# [data-testid="stToolbar"],
+# [data-testid="stSidebar"] {
+#     direction: rtl;
+#     unicode-bidi: bidi-override;
+#     text-align: right;
+# }
 
 /* Sidebar fixed width = 280px */
 [data-testid="stSidebar"],
@@ -72,28 +72,6 @@ html, body, [data-testid="stAppViewContainer"] {
     max-width: 280px !important;
 }
 
-/* ===== Sidebar-specific font sizes ===== */
-[data-testid="stSidebar"] {
-    font-size: 20px !important;              /* base text in sidebar */
-}
-
-/* Sidebar labels */
-[data-testid="stSidebar"] .stTextInput label,
-[data-testid="stSidebar"] .stTextArea label,
-[data-testid="stSidebar"] .stNumberInput label,
-[data-testid="stSidebar"] .stSelectbox label,
-[data-testid="stSidebar"] .stMultiselect label,
-[data-testid="stSidebar"] .stCheckbox label,
-[data-testid="stSidebar"] .stRadio label,
-[data-testid="stSidebar"] .streamlit-expanderHeader {
-    font-size: 20px !important;              /* label size in sidebar */
-}
-
-/* Sidebar tables/dataframes (if any) */
-[data-testid="stSidebar"] .stDataFrame,
-[data-testid="stSidebar"] .stTable {
-    font-size: 14px !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
