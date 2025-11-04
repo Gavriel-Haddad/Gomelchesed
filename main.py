@@ -54,15 +54,15 @@ html, body, [data-testid="stAppViewContainer"] {
 #     direction: ltr !important; /* layout flow only */
 # }
 
-# /* Keep visible content RTL (unchanged look & feel) */
-# [data-testid="stMain"],
-# [data-testid="stHeader"],
-# [data-testid="stToolbar"],
-# [data-testid="stSidebar"] {
-#     direction: rtl;
-#     unicode-bidi: bidi-override;
-#     text-align: right;
-# }
+/* Keep visible content RTL (unchanged look & feel) */
+[data-testid="stMain"],
+[data-testid="stHeader"],
+[data-testid="stToolbar"],
+[data-testid="stSidebar"] {
+    direction: rtl;
+    unicode-bidi: bidi-override;
+    text-align: right;
+}
 
 /* Sidebar fixed width = 280px */
 [data-testid="stSidebar"],
