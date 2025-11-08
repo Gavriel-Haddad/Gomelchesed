@@ -535,7 +535,7 @@ try:
 				st.session_state["donation_submitted"] = False
 
 				st.rerun()
-		elif action == "להוציא דוח לפי מתפלל":
+		elif action == "להוציא דוח מתפלל":
 			name = st.selectbox("על מי תרצה להוציא דוח?", options=dal.get_all_people(), index=None, placeholder="בחר מתפלל")
 			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
 			
@@ -566,7 +566,7 @@ try:
 				year = str(year).replace('"', '')
 				cols[1].download_button("📥 Save as Excel", data=excel_file, file_name=f"{name} - {year}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
 				cols[3].download_button("📄 Save as PDF", data=pdf_file, file_name=f"{name} - {year}.pdf", mime="application/pdf", use_container_width=True)
-		elif action == "להוציא דוח לפי פרשה":
+		elif action == "להוציא דוח פרשה":
 			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
 			if year != None:
 				day = st.text_input("על איזה פרשה תרצה להוציא דוח?", placeholder="בחר פרשה")
