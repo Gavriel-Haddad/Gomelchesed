@@ -452,16 +452,16 @@ def get_general_report():
 
 		if balance > 0:
 			total_owed += balance
-			names.append(person)
-			debts.append(balance)
+		names.append(person)
+		debts.append(balance)
 
 	general_report = {
-		"סכום": debts,
-		"שם": names,
+		"סכום": debts + ["", total_owed],
+		"שם": names + ["", 'סה"כ'],
 	}
 
 	general_report = pd.DataFrame.from_dict(general_report)
-	return (total_owed, general_report)
+	return general_report
 
 
 try:
@@ -588,9 +588,7 @@ try:
 					cols[1].download_button("📥 Save as Excel", data=excel_file, file_name=f"{message}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
 					cols[3].download_button("📄 Save as PDF", data=pdf_file, file_name=f"{message}.pdf", mime="application/pdf", use_container_width=True)
 		elif action == "להוציא דוח כללי":
-			total, general_report = get_general_report()
-
-			st.write(f"כסף בחוץ: {total:,}")
+			general_report = get_general_report()
 			display_dataframe(general_report)
 		elif action == "להוציא קבלות":
 			try:
