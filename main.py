@@ -502,7 +502,7 @@ try:
 		st.session_state["db_loaded"] = True
 
 
-	actions = ["למלא דוח שבועי", "לתעד תרומה", "להוציא קבלות", "להוציא דוח", "לעשות תיקון"]
+	actions = ["למלא דוח שבועי", "להוציא דוח לפי פרשה", "להוציא דוח לפי מתפלל", "להוציא דוח כללי", "לתעד תרומה", "להוציא קבלות", "לעשות תיקון"]
 	action = st.sidebar.radio("מה תרצה לעשות?", options=actions)#, key=st.session_state["purchase_key"])
 
 	if action != None:
@@ -534,74 +534,69 @@ try:
 				st.session_state["donation_submitted"] = False
 
 				st.rerun()
-		elif action == "להוציא דוח":
-			options = ["לפי מתפלל", "לפי פרשה", "כללי"]
-			choice = st.selectbox("איזה דוח תרצה להוציא?", options=options, index=None, placeholder="בחר דוח")
-
-
-			if choice == "לפי מתפלל":
-				name = st.selectbox("על מי תרצה להוציא דוח?", options=dal.get_all_people(), index=None, placeholder="בחר מתפלל")
-				year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
+		elif action == "להוציא דוח לפי מתפלל":
+			name = st.selectbox("על מי תרצה להוציא דוח?", options=dal.get_all_people(), index=None, placeholder="בחר מתפלל")
+			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
+			
+			if name != None:
+				donations_report, purchases_report, general_report = get_report_by_person(name, year)
+				purchases_report.drop(["שנה", "שם", "level"], axis=1, inplace=True)
+				donations_report.drop(["שנה", "שם"], axis=1, inplace=True)
+				general_report.drop(["שנה", "שם"], axis=1, inplace=True)
 				
-				if name != None:
-					donations_report, purchases_report, general_report = get_report_by_person(name, year)
-					purchases_report.drop(["שנה", "שם", "level"], axis=1, inplace=True)
-					donations_report.drop(["שנה", "שם"], axis=1, inplace=True)
-					general_report.drop(["שנה", "שם"], axis=1, inplace=True)
-					
 
-					st.write("חובות")
-					display_dataframe(purchases_report)
+				st.write("חובות")
+				display_dataframe(purchases_report)
 
-					st.write("תרומות")
-					display_dataframe(donations_report)
+				st.write("תרומות")
+				display_dataframe(donations_report)
 
-					st.write('סה"כ')
-					display_dataframe(general_report)
+				st.write('סה"כ')
+				display_dataframe(general_report)
+
+				# Download buttons
+				reports = [purchases_report, donations_report, general_report]
+				titles = ["חובות", "תרומות", 'סה"כ']
+
+				excel_file = to_excel_with_titles(reports, titles)
+				pdf_file = to_pdf_reportlab(reports, titles)
+
+				cols = st.columns([1.5, 1.7, 1.6, 1.7, 1.5])
+				year = str(year).replace('"', '')
+				cols[1].download_button("📥 Save as Excel", data=excel_file, file_name=f"{name} - {year}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
+				cols[3].download_button("📄 Save as PDF", data=pdf_file, file_name=f"{name} - {year}.pdf", mime="application/pdf", use_container_width=True)
+		elif action == "להוציא דוח לפי פרשה":
+			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
+			if year != None:
+				day = st.text_input("על איזה פרשה תרצה להוציא דוח?", placeholder="בחר פרשה")
+
+			if st.button("הוצא דוח"):
+				if year != None and day != "":
+					report, message= get_report_by_day(year, day)
+					report.drop(["תאריך", "שנה", "level"], axis=1, inplace=True)
+					if len(set(report["פרשה"].tolist()) - set([""])) == 1:
+						report.drop(["פרשה"], axis=1, inplace=True)
+
+
+					st.write(message)
+					display_dataframe(report)
 
 					# Download buttons
-					reports = [purchases_report, donations_report, general_report]
-					titles = ["חובות", "תרומות", 'סה"כ']
+					reports = [report]
+					titles = [message]
 
 					excel_file = to_excel_with_titles(reports, titles)
 					pdf_file = to_pdf_reportlab(reports, titles)
 
 					cols = st.columns([1.5, 1.7, 1.6, 1.7, 1.5])
-					year = str(year).replace('"', '')
-					cols[1].download_button("📥 Save as Excel", data=excel_file, file_name=f"{name} - {year}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
-					cols[3].download_button("📄 Save as PDF", data=pdf_file, file_name=f"{name} - {year}.pdf", mime="application/pdf", use_container_width=True)
-			elif choice == "לפי פרשה":
-				year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
-				if year != None:
-					day = st.text_input("על איזה פרשה תרצה להוציא דוח?", placeholder="בחר פרשה")
+					message = str(message).replace('"', '')
+					cols[1].download_button("📥 Save as Excel", data=excel_file, file_name=f"{message}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
+					cols[3].download_button("📄 Save as PDF", data=pdf_file, file_name=f"{message}.pdf", mime="application/pdf", use_container_width=True)
+		elif action == "להוציא דוח כללי":
+			total, general_report = get_general_report()
 
-				if st.button("הוצא דוח"):
-					if year != None and day != "":
-						report, message= get_report_by_day(year, day)
-						report.drop(["תאריך", "שנה", "level"], axis=1, inplace=True)
-						if len(set(report["פרשה"].tolist()) - set([""])) == 1:
-							report.drop(["פרשה"], axis=1, inplace=True)
-
-
-						st.write(message)
-						display_dataframe(report)
-
-						# Download buttons
-						reports = [report]
-						titles = [message]
-
-						excel_file = to_excel_with_titles(reports, titles)
-						pdf_file = to_pdf_reportlab(reports, titles)
-
-						cols = st.columns([1.5, 1.7, 1.6, 1.7, 1.5])
-						message = str(message).replace('"', '')
-						cols[1].download_button("📥 Save as Excel", data=excel_file, file_name=f"{message}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
-						cols[3].download_button("📄 Save as PDF", data=pdf_file, file_name=f"{message}.pdf", mime="application/pdf", use_container_width=True)
-			elif choice == "כללי":
-				total, general_report = get_general_report()
-
-				st.write(f"כסף בחוץ: {total:,}")
-				display_dataframe(general_report)
+			st.write(f"כסף בחוץ: {total:,}")
+			display_dataframe(general_report)
 		elif action == "להוציא קבלות":
 			try:
 				handle_reciepts()
