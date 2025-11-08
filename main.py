@@ -81,15 +81,7 @@ if "css_injected" not in st.session_state:
     time.sleep(2)
     st.rerun()
 
-
-def display_text_in_center(text):
-	st.markdown(f"""
-    		<h1 style="text-align: center; font-size: 15px">{text}</h1>
-		""", unsafe_allow_html=True)
-
 def display_dataframe(data: pd.DataFrame):
-	# cols = st.columns([0.75,5,0.75])
-	# with cols[1]:
 	st.dataframe(data, use_container_width=True, column_config={
 			"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
 			"סכום": st.column_config.NumberColumn(format="localized"),
@@ -511,8 +503,8 @@ try:
 		st.session_state["db_loaded"] = True
 
 
-	actions = ["למלא דוח שבועי", "להוציא דוח לפי פרשה", "להוציא דוח לפי מתפלל", "להוציא דוח כללי", "לתעד תרומה", "להוציא קבלות", "לעשות תיקון"]
-	action = st.sidebar.radio("מה תרצה לעשות?", options=actions)#, key=st.session_state["purchase_key"])
+	actions = ["למלא דוח שבועי", "להוציא דוח פרשה", "להוציא דוח מתפלל", "להוציא דוח כללי", "לתעד תרומה", "להוציא קבלות", "לעשות תיקון"]
+	action = st.sidebar.radio("מה תרצה לעשות?", options=actions, label_visibility="collapsed")
 
 	if action != None:
 		if action == "למלא דוח שבועי":
