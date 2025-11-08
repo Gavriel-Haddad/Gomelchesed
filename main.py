@@ -33,7 +33,7 @@ html, body, [data-testid="stAppViewContainer"] {
 /* Apply font size to labels */
 .stTextInput label, .stTextArea label, .stNumberInput label, 
 .stSelectbox label, .stMultiselect label, .stCheckbox label, 
-.stRadio label {
+{
     font-size: 25px;  /* Adjust this value as needed */
 }
 
@@ -43,7 +43,7 @@ html, body, [data-testid="stAppViewContainer"] {
 }
 
 .streamlit-expanderHeader, .stTextInput > label, .stTextArea > label, .stNumberInput > label, 
-.stSelectbox > label, .stMultiselect > label, .stCheckbox > label, .stRadio > label {
+.stSelectbox > label, .stMultiselect > label, .stCheckbox > label{
     text-decoration: underline;
     margin-bottom: 6px;
     display: block;
