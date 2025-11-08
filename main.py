@@ -442,26 +442,40 @@ def get_report_by_day(year: str, day: str):
 
 def get_general_report():
 	people = dal.get_all_people()
-	total_owed = 0
+	total_owed_reg = 0
+	total_owed_gue = 0
 
-	names, debts = [], []
+	reg_names, reg_debts = [], []
+	gue_names, gue_debts = [], []
 	for person in people:
 		_, _, report = get_report_by_person(person, dal.get_last_yesr())
-		
 		balance = float(report["סכום"].tolist()[0])
 
-		if balance > 0:
-			total_owed += balance
-		names.append(person)
-		debts.append(balance)
+		if "אורח" in person:
+			if balance > 0:
+				total_owed_gue += balance
+			gue_names.append(person)
+			gue_debts.append(balance)
+		else:
+			if balance > 0:
+				total_owed_reg += balance
+			reg_names.append(person)
+			reg_debts.append(balance)
 
-	general_report = {
-		"סכום": debts + ["", total_owed],
-		"שם": names + ["", 'סה"כ'],
+	regulars_report = {
+		"שם": reg_names + ["", "סך הכל"],
+		"סכום": reg_debts + ["", total_owed_reg]
+	}
+	guests_report = {
+		"שם": gue_names + ["", "סך הכל"],
+		"סכום": gue_debts + ["", total_owed_gue]
 	}
 
-	general_report = pd.DataFrame.from_dict(general_report)
-	return general_report
+	regulars_report = pd.DataFrame(regulars_report)
+	guests_report = pd.DataFrame(guests_report)
+
+
+	return regulars_report, guests_report
 
 
 try:
@@ -588,8 +602,13 @@ try:
 					cols[1].download_button("📥 Save as Excel", data=excel_file, file_name=f"{message}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
 					cols[3].download_button("📄 Save as PDF", data=pdf_file, file_name=f"{message}.pdf", mime="application/pdf", use_container_width=True)
 		elif action == "להוציא דוח כללי":
-			general_report = get_general_report()
-			display_dataframe(general_report)
+			regulars_report, guests_report = get_general_report()
+
+			st.write("מתפללים רגילים")
+			display_dataframe(regulars_report)
+
+			st.write("אורחים")
+			display_dataframe(guests_report)
 		elif action == "להוציא קבלות":
 			try:
 				handle_reciepts()
