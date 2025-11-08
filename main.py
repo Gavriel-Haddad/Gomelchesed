@@ -382,6 +382,7 @@ def get_report_by_person(name: str, year: str):
 
 	total = yearly_total + previous_total
 
+	# PURCHASES REPORT FORMATTING
 	previous_year_row = {"סכום": previous_total, "מצוה" : "", "פרשה": f"יתרה משנה קודמת", "שנה": "", "תאריך": [None], "שם": [name]}
 	previous_year_row = pd.DataFrame.from_dict(previous_year_row)
 	
@@ -391,7 +392,13 @@ def get_report_by_person(name: str, year: str):
 	sum_row = {"סכום": previous_total + yearly_purchases_sum, "מצוה" : "", "פרשה": f'סה"כ', "שנה": "", "תאריך": [None]}
 	sum_row = pd.DataFrame(sum_row)
 	yearly_purchases_report = pd.concat([previous_year_row, yearly_purchases_report, separation_row, sum_row], ignore_index=True)
+	
+	purchases_columns = yearly_purchases_report.columns
+	reordered_purchases_columns = ["הערות"] + [col for col in purchases_columns if col != "הערות"]
+	yearly_purchases_report = yearly_purchases_report[reordered_purchases_columns]
 
+
+	# DONATIONS REPORT FORMATTING
 	separation_row = {"הערות": "", "סכום" : [""], "מספר קבלה": [""],"מספר פנקס": [""],"קבלה": [None],"אופן תשלום": [""],"שם": [""], "שנה": [""], "תאריך": [None]}
 	separation_row = pd.DataFrame(separation_row)
 
@@ -400,14 +407,10 @@ def get_report_by_person(name: str, year: str):
 	yearly_donations_report = pd.concat([yearly_donations_report, separation_row, sum_row], ignore_index=True)
 	yearly_donations_report = yearly_donations_report.loc[:, ["הערות", "סכום", "מספר קבלה", "מספר פנקס" ,"קבלה", "אופן תשלום", "שם", "שנה", "תאריך"]]
 
+
+	# GENERAL REPORT FORMATTING
 	general_report = {"סכום" : total, "שם": [""], "שנה": [""], "תאריך": [datetime.today()]}
 	general_report = pd.DataFrame(general_report)
-
-	purchases_columns = yearly_purchases_report.columns
-	reordered_purchases_columns = ["הערות"] + [col for col in purchases_columns if col != "הערות"]
-	yearly_purchases_report = yearly_purchases_report[reordered_purchases_columns]
-
-
 
 
 	return (yearly_donations_report, yearly_purchases_report, general_report)
@@ -439,18 +442,18 @@ def get_report_by_day(year: str, day: str):
 
 def get_general_report():
 	people = dal.get_all_people()
-	money_owed = 0
+	total_owed = 0
 
 	names, debts = [], []
 	for person in people:
-		report, _, _ = get_report_by_person(person, dal.get_last_yesr())
+		_, _, report = get_report_by_person(person, dal.get_last_yesr())
 		
-		balance = float(report["סך הכל"].tolist()[0])
+		balance = float(report["סכום"].tolist()[0])
 
-		if balance < 0:
-			money_owed += balance * -1
+		if balance > 0:
+			total_owed += balance
 			names.append(person)
-			debts.append(balance * -1)
+			debts.append(balance)
 
 	general_report = {
 		"סכום": debts,
@@ -458,15 +461,7 @@ def get_general_report():
 	}
 
 	general_report = pd.DataFrame.from_dict(general_report)
-	return (money_owed, general_report)
-
-
-
-	# if "logged_in" not in st.session_state:
-	# 	if authenticate():
-	# 		st.rerun()
-	# else:
-
+	return (total_owed, general_report)
 
 
 try:
