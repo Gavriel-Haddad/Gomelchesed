@@ -463,12 +463,12 @@ def get_general_report():
 			reg_debts.append(balance)
 
 	regulars_report = {
+		"סכום": reg_debts + ["", total_owed_reg],
 		"שם": reg_names + ["", "סך הכל"],
-		"סכום": reg_debts + ["", total_owed_reg]
 	}
 	guests_report = {
+		"סכום": gue_debts + ["", total_owed_gue],
 		"שם": gue_names + ["", "סך הכל"],
-		"סכום": gue_debts + ["", total_owed_gue]
 	}
 
 	regulars_report = pd.DataFrame(regulars_report)
