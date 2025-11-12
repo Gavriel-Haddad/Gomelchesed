@@ -404,11 +404,11 @@ def get_report_by_person(name: str, year: str):
 		yearly_donations_report['מספר פנקס'].astype(str) + '/' + yearly_donations_report['מספר קבלה'].astype(str)
 	)
 	cols = list(yearly_donations_report.columns)
-	book_idx = cols.index('מספר פנקס')
 	cols.remove('מספר פנקס')
 	cols.remove('מספר קבלה')
 	cols.remove('קבלה')
-	cols.insert(book_idx + 2, 'קבלה')
+	book_idx = cols.index('אופן תשלום') + 1
+	cols.insert(book_idx, 'קבלה')
 	yearly_donations_report = yearly_donations_report[cols]
 
 	# GENERAL REPORT FORMATTING
