@@ -503,11 +503,11 @@ try:
 		st.session_state["db_loaded"] = True
 
 
-	actions = ["למלא דוח שבועי", "להוציא דוח פרשה", "להוציא דוח מתפלל", "להוציא דוח כללי", "לתעד תרומה", "להוציא קבלות", "לתקן דוח מתפלל", "לתקן דוח פרשה"]
+	actions = ["מילוי דוח שבועי", "דוח פרשה", "דוח מתפלל", "להוציא דוח כללי", "תיעוד תרומה", "הוצאת קבלות", "תיקון דוח מתפלל", "תיקון דוח פרשה"]
 	action = st.sidebar.radio("מה תרצה לעשות?", options=actions, label_visibility="collapsed")
 
 	if action != None:
-		if action == "למלא דוח שבועי":
+		if action == "מילוי דוח שבועי":
 			try:
 				handle_purchase()
 			except Exception as e:
@@ -521,7 +521,7 @@ try:
 				st.session_state["purchase_submitted"] = False
 
 				st.rerun()
-		elif action == "לתעד תרומה":
+		elif action == "תיעוד תרומה":
 			try:
 				handle_donation()
 			except Exception as e:
@@ -535,7 +535,7 @@ try:
 				st.session_state["donation_submitted"] = False
 
 				st.rerun()
-		elif action == "להוציא דוח מתפלל":
+		elif action == "דוח מתפלל":
 			name = st.selectbox("על מי תרצה להוציא דוח?", options=dal.get_all_people(), index=None, placeholder="בחר מתפלל")
 			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
 			
@@ -566,7 +566,7 @@ try:
 				year = str(year).replace('"', '')
 				cols[1].download_button("📥 Save as Excel", data=excel_file, file_name=f"{name} - {year}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
 				cols[3].download_button("📄 Save as PDF", data=pdf_file, file_name=f"{name} - {year}.pdf", mime="application/pdf", use_container_width=True)
-		elif action == "להוציא דוח פרשה":
+		elif action == "דוח פרשה":
 			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
 			if year != None:
 				day = st.text_input("על איזה פרשה תרצה להוציא דוח?", placeholder="בחר פרשה")
@@ -601,7 +601,7 @@ try:
 
 			st.write("אורחים")
 			display_dataframe(guests_report)
-		elif action == "להוציא קבלות":
+		elif action == "הוצאת קבלות":
 			try:
 				handle_reciepts()
 			except Exception as e:
@@ -615,7 +615,7 @@ try:
 				st.session_state["reciepts_submitted"] = False
 
 				st.rerun()
-		elif action == "לתקן דוח מתפלל":
+		elif action == "תיקון דוח מתפלל":
 			name = st.selectbox("אצל מי צריך לתקן?", options=dal.get_all_people(), index=None, placeholder="בחר מתפלל", key=f"{st.session_state['fix_key']}")
 			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
 			
@@ -667,7 +667,7 @@ try:
 						st.rerun()
 					except Exception as e:
 						st.error(str(e) + " was the error")
-		elif action == "לתקן דוח פרשה":
+		elif action == "תיקון דוח פרשה":
 			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
 			day = st.selectbox("באחזה פרשה צריך לתקן?", options=dal.get_all_days(year), index=None, placeholder="בחר פרשה", key=f"{st.session_state['fix_key']}")
 			
