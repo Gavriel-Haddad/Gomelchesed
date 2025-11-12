@@ -503,7 +503,7 @@ try:
 		st.session_state["db_loaded"] = True
 
 
-	actions = ["מילוי דוח שבועי", "דוח פרשה", "דוח מתפלל", "להוציא דוח כללי", "תיעוד תרומה", "הוצאת קבלות", "תיקון דוח מתפלל", "תיקון דוח פרשה"]
+actions = ["מילוי דוח שבועי", "דוח פרשה", "דוח מתפלל", "דוח כללי", "תיעוד תרומה", "הוצאת קבלות", "תיקון דוח מתפלל", "תיקון דוח פרשה"]
 	action = st.sidebar.radio("מה תרצה לעשות?", options=actions, label_visibility="collapsed")
 
 	if action != None:
@@ -593,7 +593,7 @@ try:
 					message = str(message).replace('"', '')
 					cols[1].download_button("📥 Save as Excel", data=excel_file, file_name=f"{message}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
 					cols[3].download_button("📄 Save as PDF", data=pdf_file, file_name=f"{message}.pdf", mime="application/pdf", use_container_width=True)
-		elif action == "להוציא דוח כללי":
+		elif action == "דוח כללי":
 			regulars_report, guests_report = get_general_report()
 
 			st.write("מתפללים רגילים")
