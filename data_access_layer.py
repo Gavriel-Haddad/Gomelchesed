@@ -73,7 +73,7 @@ def get_all_donations(reciepted):
 	if reciepted:
 		return st.session_state["DONATIONS"][st.session_state["DONATIONS"]["מספר קבלה"]]
 	else:
-		return st.session_state["DONATIONS"][~st.session_state["DONATIONS"]["מספר קבלה"]]
+		return st.session_state["DONATIONS"][not(st.session_state["DONATIONS"]["מספר קבלה"])]
 
 
 
