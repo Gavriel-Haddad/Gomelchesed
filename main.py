@@ -706,12 +706,7 @@ try:
 
 
 except Exception as e:
-	st.error("""
-			מצטערים... קרתה תקלה...\n\n
-		  אנא פנו לצוות התמיכה הטכנית בטלפון 0508248214
-		""")
-	
-	st.error(str(e))
+	raise e
 
 
 
