@@ -110,7 +110,6 @@ def to_excel_with_titles(dfs: list[pd.DataFrame], titles):
 		
 		if 'תאריך' in df.columns:
 			df["תאריך"] = pd.to_datetime(df["תאריך"], errors='coerce').dt.strftime("%d/%m/%Y")
-		df.drop("קבלה", axis=1, inplace=True, errors='ignore')
 	
 	output = io.BytesIO()
 	with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
@@ -254,7 +253,6 @@ def handle_reciepts():
 		u_data = u_data[u_data["אופן תשלום"] != "הוראת קבע"]
 
 		uneditables = u_data.columns.tolist()
-		uneditables.remove("קבלה")
 		uneditables.remove("מספר פנקס")
 		uneditables.remove("מספר קבלה")
 
@@ -341,12 +339,11 @@ def handle_donation():
 		if st.button("שמור"):
 			with st.spinner("שומר..."):
 				final_name = name if name != "חדש" else new_name
-				
 
 				if name == "חדש":
 					dal.add_new_person(new_name)
 
-				dal.insert_donation(date, year, final_name, amount, method, has_reciept, book, reciept, notes)
+				dal.insert_donation(date, year, final_name, amount, method, book, reciept, notes)
 				
 				st.session_state["donation_submitted"] = True
 
@@ -391,13 +388,13 @@ def get_report_by_person(name: str, year: str):
 
 
 	# DONATIONS REPORT FORMATTING
-	separation_row = {"הערות": "", "סכום" : [""], "מספר קבלה": [""],"מספר פנקס": [""],"קבלה": [None],"אופן תשלום": [""],"שם": [""], "שנה": [""], "תאריך": [None]}
+	separation_row = {"הערות": "", "סכום" : [""], "מספר קבלה": [""],"מספר פנקס": [""],"אופן תשלום": [""],"שם": [""], "שנה": [""], "תאריך": [None]}
 	separation_row = pd.DataFrame(separation_row)
 
-	sum_row = {"הערות": "", "סכום" : yearly_donations_sum, "מספר קבלה": [""],"מספר פנקס": [""],"קבלה": [None],"אופן תשלום": ['סה"כ'], "שם": [""], "שנה": [""], "תאריך": [None]}
+	sum_row = {"הערות": "", "סכום" : yearly_donations_sum, "מספר קבלה": [""],"מספר פנקס": [""],"אופן תשלום": ['סה"כ'], "שם": [""], "שנה": [""], "תאריך": [None]}
 	sum_row = pd.DataFrame(sum_row)
 	yearly_donations_report = pd.concat([yearly_donations_report, separation_row, sum_row], ignore_index=True)
-	yearly_donations_report = yearly_donations_report.loc[:, ["הערות", "סכום", "מספר קבלה", "מספר פנקס" ,"קבלה", "אופן תשלום", "שם", "שנה", "תאריך"]]
+	yearly_donations_report = yearly_donations_report.loc[:, ["הערות", "סכום", "מספר קבלה", "מספר פנקס", "אופן תשלום", "שם", "שנה", "תאריך"]]
 
 
 	# GENERAL REPORT FORMATTING

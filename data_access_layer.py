@@ -24,7 +24,7 @@ def load_donations():
     engine = st.session_state["engine"]
     data = pd.read_sql("donations", engine.connect())
 
-    new_column_order = ["תאריך", "שנה", "שם", "סכום", "אופן תשלום", "קבלה", "מספר פנקס", "מספר קבלה", "הערות"]
+    new_column_order = ["תאריך", "שנה", "שם", "סכום", "אופן תשלום", "מספר פנקס", "מספר קבלה", "הערות"]
     data = data[new_column_order]
 
     st.session_state["DONATIONS"] = data
@@ -71,9 +71,9 @@ def get_all_days(year: str = ""):
 
 def get_all_donations(reciepted):
 	if reciepted:
-		return st.session_state["DONATIONS"][st.session_state["DONATIONS"]["קבלה"]]
+		return st.session_state["DONATIONS"][st.session_state["DONATIONS"]["מספר קבלה"]]
 	else:
-		return st.session_state["DONATIONS"][~st.session_state["DONATIONS"]["קבלה"]]
+		return st.session_state["DONATIONS"][~st.session_state["DONATIONS"]["מספר קבלה"]]
 
 
 
@@ -113,7 +113,7 @@ def insert_purchase(date, year, day, name, amount, mitsva, notes):
     execute_query(query)
     load_purchases()
 
-def insert_donation(date, year, name, amount, method, has_reciept, book_number, reciept_number, notes):
+def insert_donation(date, year, name, amount, method, book_number, reciept_number, notes):
     if not date \
         or not year \
         or not name \
@@ -122,9 +122,9 @@ def insert_donation(date, year, name, amount, method, has_reciept, book_number, 
 
 
     query = f"""
-        insert into donations (תאריך, שנה, שם, סכום, "אופן תשלום", קבלה, "מספר פנקס", "מספר קבלה",הערות)
+        insert into donations (תאריך, שנה, שם, סכום, "אופן תשלום", "מספר פנקס", "מספר קבלה",הערות)
 		VALUES
-		('{date}', '{year}', '{name}', {amount}, '{method}', {has_reciept}, '{book_number}', '{reciept_number}', '{notes}')
+		('{date}', '{year}', '{name}', {amount}, '{method}', '{book_number}', '{reciept_number}', '{notes}')
     """
     
     execute_query(query)
@@ -164,8 +164,7 @@ def mark_reciepts(data: pd.DataFrame):
     if data["תאריך"].hasnans \
         or data["שנה"].hasnans \
         or data["שם"].hasnans \
-        or data["אופן תשלום"].hasnans \
-        or data["קבלה"].hasnans:
+        or data["אופן תשלום"].hasnans:
           raise Exception("מידע חסר")
     
     data.to_sql("donations", st.session_state["engine"].connect(), if_exists='replace', index=False)
@@ -175,8 +174,7 @@ def update_person_data(name: str, year, new_purchases: pd.DataFrame, new_donatio
     if new_donations["תאריך"].hasnans \
         or new_donations["שנה"].hasnans \
         or new_donations["שם"].hasnans \
-        or new_donations["אופן תשלום"].hasnans \
-        or new_donations["קבלה"].hasnans:
+        or new_donations["אופן תשלום"].hasnans:
           raise Exception("מידע חסר")
     
     if new_purchases["תאריך"].hasnans \
