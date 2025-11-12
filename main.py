@@ -408,7 +408,7 @@ def get_report_by_person(name: str, year: str):
 	cols.remove('מספר פנקס')
 	cols.remove('מספר קבלה')
 	cols.remove('קבלה')
-	cols.insert(book_idx + 1, 'קבלה')
+	cols.insert(book_idx + 2, 'קבלה')
 	yearly_donations_report = yearly_donations_report[cols]
 
 	# GENERAL REPORT FORMATTING
