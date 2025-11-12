@@ -70,10 +70,11 @@ def get_all_days(year: str = ""):
         return st.session_state["DAYS"]
 
 def get_all_donations(reciepted):
-	if reciepted:
-		return st.session_state["DONATIONS"][st.session_state["DONATIONS"]["מספר קבלה"]]
-	else:
-		return st.session_state["DONATIONS"][not(st.session_state["DONATIONS"]["מספר קבלה"])]
+    donations = st.session_state["DONATIONS"]
+    if reciepted:
+        return donations[donations["מספר קבלה"]]
+    else:
+        return donations[donations["מספר קבלה"].isnull() | (donations["מספר קבלה"] == "")]
 
 
 
