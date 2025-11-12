@@ -75,7 +75,7 @@ def get_all_donations(reciepted):
         st.write(donations[donations["מספר קבלה"].notnull() & (donations["מספר קבלה"].str.strip() != "")])
         return donations[donations["מספר קבלה"].notnull() & (donations["מספר קבלה"].str.strip() != "")]
     else:
-        return donations[donations["מספר קבלה"].isnull() | (donations["מספר קבלה"] == "")]
+        return donations[donations["מספר קבלה"].isnull() | (donations["מספר קבלה"].str.strip() == "")]
 
 
 
