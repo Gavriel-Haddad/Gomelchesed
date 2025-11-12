@@ -400,7 +400,7 @@ def get_report_by_person(name: str, year: str):
 	# COMBINE RECIPT AND BOOK NUMBER COLUMNS
 	yearly_donations_report['קבלה'] = np.where(
 		yearly_donations_report['מספר פנקס'].isna() | (yearly_donations_report['מספר פנקס'].str.strip() == ''),
-		yearly_donations_report['קבלה'].astype(str),
+		yearly_donations_report['מספר קבלה'].astype(str),
 		yearly_donations_report['מספר פנקס'].astype(str) + '/' + yearly_donations_report['מספר קבלה'].astype(str)
 	)
 
