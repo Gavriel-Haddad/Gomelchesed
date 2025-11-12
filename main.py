@@ -403,6 +403,12 @@ def get_report_by_person(name: str, year: str):
 		yearly_donations_report['מספר קבלה'].astype(str),
 		yearly_donations_report['מספר פנקס'].astype(str) + '/' + yearly_donations_report['מספר קבלה'].astype(str)
 	)
+	cols = list(yearly_donations_report.columns)
+	book_idx = cols.index('מספר פנקס')
+	cols.remove('מספר פנקס')
+	cols.remove('מספר קבלה')
+	cols.insert(book_idx, 'קבלה')
+	yearly_donations_report = yearly_donations_report[cols]
 
 	# GENERAL REPORT FORMATTING
 	general_report = {"סכום" : total, "שם": [""], "שנה": [""], "תאריך": [datetime.today()]}
