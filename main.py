@@ -503,7 +503,7 @@ try:
 		st.session_state["db_loaded"] = True
 
 
-	actions = ["למלא דוח שבועי", "להוציא דוח פרשה", "להוציא דוח מתפלל", "להוציא דוח כללי", "לתעד תרומה", "להוציא קבלות", "לעשות תיקון"]
+	actions = ["למלא דוח שבועי", "להוציא דוח פרשה", "להוציא דוח מתפלל", "להוציא דוח כללי", "לתעד תרומה", "להוציא קבלות", "לתקן דוח מתפלל", "לתקן דוח פרשה"]
 	action = st.sidebar.radio("מה תרצה לעשות?", options=actions, label_visibility="collapsed")
 
 	if action != None:
@@ -615,100 +615,96 @@ try:
 				st.session_state["reciepts_submitted"] = False
 
 				st.rerun()
-		elif action == "לעשות תיקון":
-			options = ["לפי מתפלל", "לפי פרשה"]
-			choice = st.selectbox("איזה דוח תרצה לתקן?", options=options, index=None, placeholder="בחר דוח")
+		elif action == "לתקן דוח מתפלל":
+			name = st.selectbox("אצל מי צריך לתקן?", options=dal.get_all_people(), index=None, placeholder="בחר מתפלל", key=f"{st.session_state['fix_key']}")
+			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
+			
+			if name != None and year != None:
+				donations_report, purchases_report, _ = get_report_by_person(name, year)
+				purchases_report.reset_index(inplace=True, drop=True)
+				purchases_report.drop([0, len(purchases_report) - 2, len(purchases_report) - 1], axis=0, inplace=True)
+				purchases_report.drop(["level"], axis=1, inplace=True)
 
-			if choice == "לפי מתפלל":
-				name = st.selectbox("אצל מי צריך לתקן?", options=dal.get_all_people(), index=None, placeholder="בחר מתפלל", key=f"{st.session_state['fix_key']}")
-				year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
-				
-				if name != None and year != None:
-					donations_report, purchases_report, _ = get_report_by_person(name, year)
-					purchases_report.reset_index(inplace=True, drop=True)
-					purchases_report.drop([0, len(purchases_report) - 2, len(purchases_report) - 1], axis=0, inplace=True)
-					purchases_report.drop(["level"], axis=1, inplace=True)
-
-					donations_report.drop([len(donations_report) - 2, len(donations_report) - 1], axis=0, inplace=True)
+				donations_report.drop([len(donations_report) - 2, len(donations_report) - 1], axis=0, inplace=True)
 
 
 
-					st.write("חובות")
-					purchases_report.insert(0, "?האם למחוק", False)
-					purchases_report.reset_index(drop=True, inplace=True)
-					edited_purchases_report = st.data_editor(purchases_report, column_config={
-						"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
-						"מצוה": st.column_config.SelectboxColumn(options=st.session_state["MITZVOT"])
-					}, hide_index=True, key="purchases_data_editor")
+				st.write("חובות")
+				purchases_report.insert(0, "?האם למחוק", False)
+				purchases_report.reset_index(drop=True, inplace=True)
+				edited_purchases_report = st.data_editor(purchases_report, column_config={
+					"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
+					"מצוה": st.column_config.SelectboxColumn(options=st.session_state["MITZVOT"])
+				}, hide_index=True, key="purchases_data_editor")
 
-					st.write("תרומות")
-					donations_report.insert(0, "?האם למחוק", False)
-					donations_report.reset_index(drop=True, inplace=True)
-					edited_donations_report = st.data_editor(donations_report, column_config={
-						"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
-					}, hide_index=True, key="donations_data_editor")
+				st.write("תרומות")
+				donations_report.insert(0, "?האם למחוק", False)
+				donations_report.reset_index(drop=True, inplace=True)
+				edited_donations_report = st.data_editor(donations_report, column_config={
+					"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
+				}, hide_index=True, key="donations_data_editor")
 
-					if st.button("שמור"):
-						try:
-							# edited_purchases_report.insert(1, "שם", name)
-							# edited_donations_report.insert(5, "שם", name)
+				if st.button("שמור"):
+					try:
+						# edited_purchases_report.insert(1, "שם", name)
+						# edited_donations_report.insert(5, "שם", name)
 
-							edited_purchases_report = edited_purchases_report[~edited_purchases_report["?האם למחוק"]]
-							edited_donations_report = edited_donations_report[~edited_donations_report["?האם למחוק"]]
+						edited_purchases_report = edited_purchases_report[~edited_purchases_report["?האם למחוק"]]
+						edited_donations_report = edited_donations_report[~edited_donations_report["?האם למחוק"]]
 
-							edited_purchases_report.drop(["?האם למחוק"], axis=1, inplace=True)
-							edited_donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
-							purchases_report.drop(["?האם למחוק"], axis=1, inplace=True)
-							donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
+						edited_purchases_report.drop(["?האם למחוק"], axis=1, inplace=True)
+						edited_donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
+						purchases_report.drop(["?האם למחוק"], axis=1, inplace=True)
+						donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
 
-							with st.spinner("שומר..."):
-								dal.update_person_data(name, year, edited_purchases_report, edited_donations_report)
+						with st.spinner("שומר..."):
+							dal.update_person_data(name, year, edited_purchases_report, edited_donations_report)
 
-							st.success("נשמר בהצלחה")
-							st.session_state["fix_key"] += 1
+						st.success("נשמר בהצלחה")
+						st.session_state["fix_key"] += 1
 
-							time.sleep(0.2)
-							st.rerun()
-						except Exception as e:
-							st.error(str(e) + " was the error")
-			elif choice == "לפי פרשה":
-				year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
-				day = st.selectbox("באחזה פרשה צריך לתקן?", options=dal.get_all_days(year), index=None, placeholder="בחר פרשה", key=f"{st.session_state['fix_key']}")
-				
-				if year != None and day != None:
-					report, message = get_report_by_day(year, day)
-					report.reset_index(inplace=True, drop=True)
-					report.drop([len(report) - 2, len(report) - 1], axis=0, inplace=True)
-					report.drop(["level"], axis=1, inplace=True)
+						time.sleep(0.2)
+						st.rerun()
+					except Exception as e:
+						st.error(str(e) + " was the error")
+		elif action == "לתקן דוח פרשה":
+			year = st.selectbox("שנה", options=dal.get_all_years(), index=len(dal.get_all_years())-1, placeholder="בחר שנה")
+			day = st.selectbox("באחזה פרשה צריך לתקן?", options=dal.get_all_days(year), index=None, placeholder="בחר פרשה", key=f"{st.session_state['fix_key']}")
+			
+			if year != None and day != None:
+				report, message = get_report_by_day(year, day)
+				report.reset_index(inplace=True, drop=True)
+				report.drop([len(report) - 2, len(report) - 1], axis=0, inplace=True)
+				report.drop(["level"], axis=1, inplace=True)
 
-					st.write(message)
-					report.insert(0, "?האם למחוק", False)
-					report.reset_index(drop=True, inplace=True)
-					edited_report = st.data_editor(report, column_config={
-						"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
-						"מצוה": st.column_config.SelectboxColumn(options=st.session_state["MITZVOT"]),
-						"שם": st.column_config.SelectboxColumn(options=st.session_state["PEOPLE"])
-					}, hide_index=True, key="purchases_data_editor")
+				st.write(message)
+				report.insert(0, "?האם למחוק", False)
+				report.reset_index(drop=True, inplace=True)
+				edited_report = st.data_editor(report, column_config={
+					"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
+					"מצוה": st.column_config.SelectboxColumn(options=st.session_state["MITZVOT"]),
+					"שם": st.column_config.SelectboxColumn(options=st.session_state["PEOPLE"])
+				}, hide_index=True, key="purchases_data_editor")
 
 
-					if st.button("שמור"):
-						try:
-							edited_report = edited_report[~edited_report["?האם למחוק"]]
-							edited_report = edited_report[~edited_report["?האם למחוק"]]
+				if st.button("שמור"):
+					try:
+						edited_report = edited_report[~edited_report["?האם למחוק"]]
+						edited_report = edited_report[~edited_report["?האם למחוק"]]
 
-							edited_report.drop(["?האם למחוק"], axis=1, inplace=True)
-							report.drop(["?האם למחוק"], axis=1, inplace=True)
+						edited_report.drop(["?האם למחוק"], axis=1, inplace=True)
+						report.drop(["?האם למחוק"], axis=1, inplace=True)
 
-							with st.spinner("שומר..."):
-								dal.update_day_data(year, day, edited_report)
+						with st.spinner("שומר..."):
+							dal.update_day_data(year, day, edited_report)
 
-							st.success("נשמר בהצלחה")
-							st.session_state["fix_key"] += 1
+						st.success("נשמר בהצלחה")
+						st.session_state["fix_key"] += 1
 
-							time.sleep(0.2)
-							st.rerun()
-						except Exception as e:
-							st.error(str(e) + " was the error")
+						time.sleep(0.2)
+						st.rerun()
+					except Exception as e:
+						st.error(str(e) + " was the error")
 
 
 
