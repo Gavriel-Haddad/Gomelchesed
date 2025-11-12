@@ -72,7 +72,6 @@ def get_all_days(year: str = ""):
 def get_all_donations(reciepted):
     donations = st.session_state["DONATIONS"]
     if reciepted:
-        st.write(donations[donations["מספר קבלה"].notnull() & (donations["מספר קבלה"].str.strip() != "")])
         return donations[donations["מספר קבלה"].notnull() & (donations["מספר קבלה"].str.strip() != "")]
     else:
         return donations[donations["מספר קבלה"].isnull() | (donations["מספר קבלה"].str.strip() == "")]

@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import time
+import numpy as np
 import io
 import os
 import data_access_layer as dal
@@ -395,7 +396,13 @@ def get_report_by_person(name: str, year: str):
 	sum_row = pd.DataFrame(sum_row)
 	yearly_donations_report = pd.concat([yearly_donations_report, separation_row, sum_row], ignore_index=True)
 	yearly_donations_report = yearly_donations_report.loc[:, ["הערות", "סכום", "מספר קבלה", "מספר פנקס", "אופן תשלום", "שם", "שנה", "תאריך"]]
-
+	
+	# COMBINE RECIPT AND BOOK NUMBER COLUMNS
+	yearly_donations_report['קבלה'] = np.where(
+		yearly_donations_report['מספר פנקס'].isna() | (yearly_donations_report['מספק פנקס'].str.strip() == ''),
+		yearly_donations_report['קבלה'].astype(str),
+		yearly_donations_report['מספר פנקס'].astype(str) + '/' + yearly_donations_report['מספר קבלה'].astype(str)
+	)
 
 	# GENERAL REPORT FORMATTING
 	general_report = {"סכום" : total, "שם": [""], "שנה": [""], "תאריך": [datetime.today()]}
