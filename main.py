@@ -355,6 +355,16 @@ def recombine_reciept_columns(df: pd.DataFrame):
 	df['מספר פנקס'] = split[0].where(has_book, np.nan)
 	df['מספר קבלה'] = np.where(has_book, split[1], split[0])
 
+	cols = df.columns
+	idx = cols.get_loc('קבלה')
+
+	left = list(cols[:idx])
+	right = list(cols[idx+1:])
+
+	# Reorder and drop book_page
+	df = df[left + ['מספר פנקס', 'מספר קבלה'] + right]
+
+
 	return df
 
 
