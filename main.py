@@ -650,20 +650,20 @@ try:
 				purchases_report.drop(["level"], axis=1, inplace=True)
 
 				donations_report.drop([len(donations_report) - 2, len(donations_report) - 1], axis=0, inplace=True)
+				donations_report = recombine_reciept_columns(donations_report)
 
 
 
 				st.write("חובות")
 				purchases_report.insert(0, "?האם למחוק", False)
 				purchases_report.reset_index(drop=True, inplace=True)
+				
 				edited_purchases_report = st.data_editor(purchases_report, column_config={
 					"תאריך": st.column_config.DateColumn(format="DD.MM.YYYY"),
 					"מצוה": st.column_config.SelectboxColumn(options=st.session_state["MITZVOT"])
 				}, hide_index=True, key="purchases_data_editor")
 
 				st.write("תרומות")
-				donations_report = recombine_reciept_columns(donations_report)
-				st.write(donations_report)
 				donations_report.insert(0, "?האם למחוק", False)
 				donations_report.reset_index(drop=True, inplace=True)
 				edited_donations_report = st.data_editor(donations_report, column_config={
@@ -681,14 +681,14 @@ try:
 						donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
 
 
-						# with st.spinner("שומר..."):
-						# 	dal.update_person_data(name, year, edited_purchases_report, edited_donations_report)
+						with st.spinner("שומר..."):
+							dal.update_person_data(name, year, edited_purchases_report, edited_donations_report)
 
-						# st.success("נשמר בהצלחה")
-						# st.session_state["fix_key"] += 1
+						st.success("נשמר בהצלחה")
+						st.session_state["fix_key"] += 1
 
-						# time.sleep(0.2)
-						# st.rerun()
+						time.sleep(0.2)
+						st.rerun()
 					except Exception as e:
 						st.error(str(e) + " was the error")
 		elif action == "תיקון דוח פרשה":
