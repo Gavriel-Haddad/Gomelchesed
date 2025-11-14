@@ -357,7 +357,8 @@ def recombine_reciept_columns(df: pd.DataFrame):
 	
 	df.drop(columns=['קבלה'], inplace=True)
 
-	df = df[["תאריך", "שנה", "שם", "סכום", "אופן תשלום", "מספר פנקס", "מספר קבלה", "הערות"]]
+	columns = ["תאריך", "שנה", "שם", "סכום", "אופן תשלום", "מספר פנקס", "מספר קבלה", "הערות"]
+	df = df[columns[::-1]]  # Reverse the order of columns
 
 	return df
 
