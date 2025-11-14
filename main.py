@@ -354,7 +354,6 @@ def recombine_reciept_columns(df: pd.DataFrame):
 	has_book = split[1].notna()
 	df['מספר פנקס'] = split[0].where(has_book, np.nan)
 	df['מספר קבלה'] = np.where(has_book, split[1], split[0])
-	df['מספר קבלה'] = pd.to_numeric(df['page'], errors='coerce')
 
 	return df
 
