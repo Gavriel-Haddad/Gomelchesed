@@ -349,6 +349,15 @@ def handle_donation():
 				st.session_state["donation_submitted"] = True
 
 
+def recombine_reciept_columns(df: pd.DataFrame):
+	split = df['קבלה'].astype(str).str.split('/', n=1, expand=True)
+	has_book = split[1].notna()
+	df['מספר פנקס'] = split[0].where(has_book, np.nan)
+	df['מספר קבלה'] = np.where(has_book, split[1], split[0])
+	df['מספר קבלה'] = pd.to_numeric(df['page'], errors='coerce')
+
+	return df
+
 
 def get_report_by_person(name: str, year: str):
 	yearly_purchases_report = st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שם"] == name) & (st.session_state["PURCHASES"]["שנה"] == year)]
@@ -649,6 +658,8 @@ try:
 				}, hide_index=True, key="purchases_data_editor")
 
 				st.write("תרומות")
+				donations_report = recombine_reciept_columns(donations_report)
+				st.write(donations_report)
 				donations_report.insert(0, "?האם למחוק", False)
 				donations_report.reset_index(drop=True, inplace=True)
 				edited_donations_report = st.data_editor(donations_report, column_config={
@@ -657,9 +668,6 @@ try:
 
 				if st.button("שמור"):
 					try:
-						# edited_purchases_report.insert(1, "שם", name)
-						# edited_donations_report.insert(5, "שם", name)
-
 						edited_purchases_report = edited_purchases_report[~edited_purchases_report["?האם למחוק"]]
 						edited_donations_report = edited_donations_report[~edited_donations_report["?האם למחוק"]]
 
@@ -668,14 +676,15 @@ try:
 						purchases_report.drop(["?האם למחוק"], axis=1, inplace=True)
 						donations_report.drop(["?האם למחוק"], axis=1, inplace=True)
 
-						with st.spinner("שומר..."):
-							dal.update_person_data(name, year, edited_purchases_report, edited_donations_report)
 
-						st.success("נשמר בהצלחה")
-						st.session_state["fix_key"] += 1
+						# with st.spinner("שומר..."):
+						# 	dal.update_person_data(name, year, edited_purchases_report, edited_donations_report)
 
-						time.sleep(0.2)
-						st.rerun()
+						# st.success("נשמר בהצלחה")
+						# st.session_state["fix_key"] += 1
+
+						# time.sleep(0.2)
+						# st.rerun()
 					except Exception as e:
 						st.error(str(e) + " was the error")
 		elif action == "תיקון דוח פרשה":
