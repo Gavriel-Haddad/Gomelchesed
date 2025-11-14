@@ -350,11 +350,6 @@ def handle_donation():
 
 
 def recombine_reciept_columns(df: pd.DataFrame):
-	split = df['קבלה'].astype(str).str.split('/', n=1, expand=True)
-	has_book = split[1].notna()
-	df['מספר פנקס'] = split[0].where(has_book, np.nan)
-	df['מספר קבלה'] = np.where(has_book, split[1], split[0])
-
 	cols = df.columns
 	idx = cols.get_loc('קבלה')
 
@@ -363,6 +358,12 @@ def recombine_reciept_columns(df: pd.DataFrame):
 
 	# Reorder and drop book_page
 	df = df[left + ['מספר פנקס', 'מספר קבלה'] + right]
+
+	split = df['קבלה'].astype(str).str.split('/', n=1, expand=True)
+	has_book = split[1].notna()
+	df['מספר פנקס'] = split[0].where(has_book, np.nan)
+	df['מספר קבלה'] = np.where(has_book, split[1], split[0])
+
 
 
 	return df
