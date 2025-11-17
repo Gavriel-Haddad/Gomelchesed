@@ -351,12 +351,16 @@ def handle_donation():
 
 def recombine_reciept_columns(df: pd.DataFrame):
 	split = df['קבלה'].astype(str).str.split('/', n=1, expand=True)
-	has_book = split[1].notna()
-	df['מספר פנקס'] = split[0].where(has_book, np.nan)
-	df['מספר קבלה'] = np.where(has_book, split[1], split[0])
 	
-	df.drop(columns=['קבלה'], inplace=True)
+	if 1 in split.columns:
+		has_book = split[1].notna()
+		df['מספר פנקס'] = split[0].where(has_book, np.nan)
+		df['מספר קבלה'] = np.where(has_book, split[1], split[0])		
+	else:
+		df['מספר קבלה'] = df["קבלה"]
+		df["מספר פנקס"] = ""
 
+	df.drop(columns=['קבלה'], inplace=True)
 	columns = ["תאריך", "שנה", "שם", "סכום", "אופן תשלום", "מספר פנקס", "מספר קבלה", "הערות"]
 	df = df[columns[::-1]]  # Reverse the order of columns
 
@@ -739,12 +743,6 @@ except Exception as e:
 		""")
 	
 	st.error(str(e))
-
-
-
-
-
-
 
 
 
