@@ -477,7 +477,7 @@ def get_general_report():
 			gue_names.append(person)
 			gue_debts.append(balance)
 		else:
-			if balance > 0:
+			if balance > 0 and person != "אלי חדד":
 				total_owed_reg += balance
 			reg_names.append(person)
 			reg_debts.append(balance)
