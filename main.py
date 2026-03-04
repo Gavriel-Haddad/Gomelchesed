@@ -462,6 +462,7 @@ def get_report_by_day(year: str, day: str):
 
 def get_general_report():
 	people = dal.get_all_people()
+	people.remove("אלי חדד")
 	total_owed_reg = 0
 	total_owed_gue = 0
 
@@ -477,7 +478,7 @@ def get_general_report():
 			gue_names.append(person)
 			gue_debts.append(balance)
 		else:
-			if balance > 0 and person != "אלי חדד":
+			if balance > 0:
 				total_owed_reg += balance
 			reg_names.append(person)
 			reg_debts.append(balance)
