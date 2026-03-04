@@ -744,6 +744,7 @@ except Exception as e:
 		  אנא פנו לצוות התמיכה הטכנית בטלפון 0508248214
 		""")
 	
+	raise e
 	st.error(str(e))
 
 
