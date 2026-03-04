@@ -462,6 +462,7 @@ def get_report_by_day(year: str, day: str):
 
 def get_general_report():
 	people = dal.get_all_people()
+	print(people)
 	people.remove("אלי חדד")
 	total_owed_reg = 0
 	total_owed_gue = 0
