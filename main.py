@@ -95,74 +95,78 @@ def display_dataframe(data: pd.DataFrame):
 
 
 def clean_nulls(data: pd.DataFrame):
+	data = data.copy()
+
 	for col in data.columns:
-		if "סכום" in col or "מספר" in col:
-			data[col] = data[col].astype('Int64', errors='ignore')
+		if "מספר" in col:
+			data[col] = pd.to_numeric(data[col], errors="coerce").astype("Int64")
+		elif "סכום" in col:
+			data[col] = pd.to_numeric(data[col], errors="coerce")
+		elif "תאריך" in col:
+			data[col] = pd.to_datetime(data[col], errors="coerce")
 		else:
-			data[col] = data[col].astype('str')
-			data[col] = data[col].apply(lambda x: "" if x in ["None", "NaT", "nan"] else x)
+			data[col] = data[col].astype("string")
+			data[col] = data[col].replace(["None", "NaT", "nan", "<NA>"], "")
+			data[col] = data[col].fillna("")
 
 	return data
 
 def to_excel_with_titles(dfs: list[pd.DataFrame], titles):
-	dfs = [df[df.columns[::-1]] for df in dfs]
+	cleaned_dfs = []
+
 	for df in dfs:
-		df = clean_nulls(df)
-		
-		if 'תאריך' in df.columns:
-			df["תאריך"] = pd.to_datetime(df["תאריך"], errors='coerce').dt.strftime("%d/%m/%Y")
-	
+		cleaned = clean_nulls(df[df.columns[::-1]].copy())
+
+		if "תאריך" in cleaned.columns:
+			cleaned["תאריך"] = cleaned["תאריך"].dt.strftime("%d/%m/%Y").fillna("")
+
+		cleaned_dfs.append(cleaned)
+
 	output = io.BytesIO()
 	with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
 		workbook = writer.book
 		worksheet = workbook.add_worksheet("Sheet1")
 		writer.sheets["Sheet1"] = worksheet
 
-        # Set worksheet RTL
 		worksheet.right_to_left()
 
-        # Title style (RTL)
 		title_format = workbook.add_format({
-            'bold': True,
-            'font_size': 14,
-            'align': 'center',
-            'valign': 'vcenter',
-            'font_color': 'white',
-            'bg_color': '#4F81BD'
-        })
+			'bold': True,
+			'font_size': 14,
+			'align': 'center',
+			'valign': 'vcenter',
+			'font_color': 'white',
+			'bg_color': '#4F81BD'
+		})
 
-        # Column header format (RTL aligned)
 		header_format = workbook.add_format({
-            'align': 'right',
-            'bold': True
-        })
+			'align': 'right',
+			'bold': True
+		})
 
 		row = 0
-		for df, title in zip(dfs, titles):
+		for df, title in zip(cleaned_dfs, titles):
 			col_count = len(df.columns)
 
-            # Merge title
 			worksheet.merge_range(row, 0, row, col_count - 1, title, title_format)
 			row += 2
 
-            # Write table data
 			df.to_excel(writer, sheet_name="Sheet1", startrow=row + 1, index=False, header=False)
 
-            # Write column headers manually with right alignment
 			for col_idx, col_name in enumerate(df.columns):
 				worksheet.write(row, col_idx, col_name, header_format)
 			row += len(df) + 4
 
-			# Auto-fit columns
 			for col_idx, col_name in enumerate(df.columns):
 				if not df.empty:
-					max_len = max(
-						df[col_name].astype(str).map(len).max(),
-						len(str(col_name))
+					cell_lengths = df[col_name].apply(
+						lambda x: len("" if pd.isna(x) else str(x))
 					)
-					worksheet.set_column(col_idx, col_idx, max_len + 2)
+					max_len = max(int(cell_lengths.max()), len(str(col_name)))
 				else:
-					max_len = len(str(col_name))  # fallback to just the column header
+					max_len = len(str(col_name))
+
+				worksheet.set_column(col_idx, col_idx, max_len + 2)
 
 	output.seek(0)
 	return output
@@ -390,28 +394,69 @@ def get_report_by_person(name: str, year: str):
 	total = yearly_total + previous_total
 
 	# PURCHASES REPORT FORMATTING
-	previous_year_row = {"סכום": previous_total, "מצוה" : "", "פרשה": f"יתרה משנה קודמת", "שנה": "", "תאריך": [None], "שם": [name]}
-	previous_year_row = pd.DataFrame.from_dict(previous_year_row)
-	
-	separation_row = {"סכום": [""], "מצוה" : [""], "פרשה": [""], "שנה": [""], "תאריך": [""]}
-	separation_row = pd.DataFrame(separation_row)
+	previous_year_row = pd.DataFrame([{col: "" for col in yearly_purchases_report.columns}])
+	if "סכום" in previous_year_row.columns:
+		previous_year_row.at[0, "סכום"] = previous_total
+	if "מצוה" in previous_year_row.columns:
+		previous_year_row.at[0, "מצוה"] = ""
+	if "פרשה" in previous_year_row.columns:
+		previous_year_row.at[0, "פרשה"] = "יתרה משנה קודמת"
+	if "שנה" in previous_year_row.columns:
+		previous_year_row.at[0, "שנה"] = ""
+	if "תאריך" in previous_year_row.columns:
+		previous_year_row.at[0, "תאריך"] = pd.NaT
+	if "שם" in previous_year_row.columns:
+		previous_year_row.at[0, "שם"] = name
+	if "level" in previous_year_row.columns:
+		previous_year_row.at[0, "level"] = pd.NA
 
-	sum_row = {"סכום": previous_total + yearly_purchases_sum, "מצוה" : "", "פרשה": f'סה"כ', "שנה": "", "תאריך": [None]}
-	sum_row = pd.DataFrame(sum_row)
-	yearly_purchases_report = pd.concat([previous_year_row, yearly_purchases_report, separation_row, sum_row], ignore_index=True)
-	
+	separation_row = pd.DataFrame([{col: "" for col in yearly_purchases_report.columns}])
+	if "סכום" in separation_row.columns:
+		separation_row.at[0, "סכום"] = pd.NA
+	if "תאריך" in separation_row.columns:
+		separation_row.at[0, "תאריך"] = pd.NaT
+	if "level" in separation_row.columns:
+		separation_row.at[0, "level"] = pd.NA
+
+	sum_row = pd.DataFrame([{col: "" for col in yearly_purchases_report.columns}])
+	if "סכום" in sum_row.columns:
+		sum_row.at[0, "סכום"] = previous_total + yearly_purchases_sum
+	if "פרשה" in sum_row.columns:
+		sum_row.at[0, "פרשה"] = 'סה"כ'
+	if "תאריך" in sum_row.columns:
+		sum_row.at[0, "תאריך"] = pd.NaT
+	if "level" in sum_row.columns:
+		sum_row.at[0, "level"] = pd.NA
+
+	yearly_purchases_report = pd.concat(
+		[previous_year_row, yearly_purchases_report, separation_row, sum_row],
+		ignore_index=True
+	)
+
 	purchases_columns = yearly_purchases_report.columns
 	reordered_purchases_columns = ["הערות"] + [col for col in purchases_columns if col != "הערות"]
 	yearly_purchases_report = yearly_purchases_report[reordered_purchases_columns]
 
 
 	# DONATIONS REPORT FORMATTING
-	separation_row = {"הערות": "", "סכום" : [""], "מספר קבלה": [""],"מספר פנקס": [""],"אופן תשלום": [""],"שם": [""], "שנה": [""], "תאריך": [None]}
-	separation_row = pd.DataFrame(separation_row)
+	separation_row = pd.DataFrame([{col: "" for col in yearly_donations_report.columns}])
+	if "סכום" in separation_row.columns:
+		separation_row.at[0, "סכום"] = pd.NA
+	if "תאריך" in separation_row.columns:
+		separation_row.at[0, "תאריך"] = pd.NaT
 
-	sum_row = {"הערות": "", "סכום" : yearly_donations_sum, "מספר קבלה": [""],"מספר פנקס": [""],"אופן תשלום": ['סה"כ'], "שם": [""], "שנה": [""], "תאריך": [None]}
-	sum_row = pd.DataFrame(sum_row)
-	yearly_donations_report = pd.concat([yearly_donations_report, separation_row, sum_row], ignore_index=True)
+	sum_row = pd.DataFrame([{col: "" for col in yearly_donations_report.columns}])
+	if "סכום" in sum_row.columns:
+		sum_row.at[0, "סכום"] = yearly_donations_sum
+	if "אופן תשלום" in sum_row.columns:
+		sum_row.at[0, "אופן תשלום"] = 'סה"כ'
+	if "תאריך" in sum_row.columns:
+		sum_row.at[0, "תאריך"] = pd.NaT
+
+	yearly_donations_report = pd.concat(
+		[yearly_donations_report, separation_row, sum_row],
+		ignore_index=True
+	)
 	yearly_donations_report = yearly_donations_report.loc[:, ["הערות", "סכום", "מספר קבלה", "מספר פנקס", "אופן תשלום", "שם", "שנה", "תאריך"]]
 	
 	# COMBINE RECIPT AND BOOK NUMBER COLUMNS
@@ -429,8 +474,12 @@ def get_report_by_person(name: str, year: str):
 	yearly_donations_report = yearly_donations_report[cols]
 
 	# GENERAL REPORT FORMATTING
-	general_report = {"סכום" : total, "שם": [""], "שנה": [""], "תאריך": [datetime.today()]}
-	general_report = pd.DataFrame(general_report)
+	general_report = pd.DataFrame([{
+		"סכום": total,
+		"שם": "",
+		"שנה": "",
+		"תאריך": datetime.today()
+	}])
 
 
 	return (yearly_donations_report, yearly_purchases_report, general_report)
@@ -446,13 +495,25 @@ def get_report_by_day(year: str, day: str):
 
 	total = report["סכום"].sum()
 
-	separation_row = ["", "", "", "", "", "", "", ""]
-	separation_row = pd.DataFrame([separation_row], columns=report.columns[-1::-1])
+	separation_row = pd.DataFrame([{col: "" for col in report.columns}])
+	if "סכום" in separation_row.columns:
+		separation_row.at[0, "סכום"] = pd.NA
+	if "תאריך" in separation_row.columns:
+		separation_row.at[0, "תאריך"] = pd.NaT
+	if "level" in separation_row.columns:
+		separation_row.at[0, "level"] = pd.NA
 
-	total_row = ["","","","", "", 'סה"כ', "", total]
-	total_row = pd.DataFrame([total_row], columns=report.columns[-1::-1])
+	total_row = pd.DataFrame([{col: "" for col in report.columns}])
+	if "סכום" in total_row.columns:
+		total_row.at[0, "סכום"] = total
+	if "פרשה" in total_row.columns:
+		total_row.at[0, "פרשה"] = 'סה"כ'
+	if "תאריך" in total_row.columns:
+		total_row.at[0, "תאריך"] = pd.NaT
+	if "level" in total_row.columns:
+		total_row.at[0, "level"] = pd.NA
 
-	report = pd.concat([report, separation_row, total_row])
+	report = pd.concat([report, separation_row, total_row], ignore_index=True)
 
 	columns = report.columns
 	reordered_columns = ["הערות"] + [col for col in columns if col != "הערות"]
@@ -484,14 +545,13 @@ def get_general_report():
 			reg_debts.append(balance)
 
 	regulars_report = {
-		"סכום": reg_debts + ["", total_owed_reg],
+		"סכום": reg_debts + [pd.NA, total_owed_reg],
 		"שם": reg_names + ["", "סך הכל"],
 	}
 	guests_report = {
-		"סכום": gue_debts + ["", total_owed_gue],
+		"סכום": gue_debts + [pd.NA, total_owed_gue],
 		"שם": gue_names + ["", "סך הכל"],
 	}
-
 	regulars_report = pd.DataFrame(regulars_report)
 	guests_report = pd.DataFrame(guests_report)
 
