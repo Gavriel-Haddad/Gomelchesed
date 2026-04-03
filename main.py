@@ -157,7 +157,7 @@ def to_excel_with_titles(dfs: list[pd.DataFrame], titles):
 			for col_idx, col_name in enumerate(df.columns):
 				if not df.empty:
 					st.write(f"C1alculating width for column: {col_name}")
-					st.write(df[col_name].astype(str))
+					st.write(df[col_name].astype(str).map(len))
 					st.write(df[col_name])
 					max_len = max(
 						df[col_name].astype(str).map(len).max(),
