@@ -156,6 +156,7 @@ def to_excel_with_titles(dfs: list[pd.DataFrame], titles):
 			# Auto-fit columns
 			for col_idx, col_name in enumerate(df.columns):
 				if not df.empty:
+					st.write(df[col_name])
 					max_len = max(
 						df[col_name].astype(str).map(len).max(),
 						len(str(col_name))
