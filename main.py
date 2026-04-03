@@ -4,6 +4,7 @@ import time
 import numpy as np
 import io
 import os
+from pandas.api.types import is_datetime64_any_dtype, is_integer_dtype, is_numeric_dtype
 import data_access_layer as dal
 
 
@@ -110,6 +111,23 @@ def clean_nulls(data: pd.DataFrame):
 			data[col] = data[col].fillna("")
 
 	return data
+
+def make_empty_row_like(df: pd.DataFrame) -> pd.DataFrame:
+	row = {}
+
+	for col in df.columns:
+		dtype = df[col].dtype
+
+		if is_datetime64_any_dtype(dtype):
+			row[col] = pd.NaT
+		elif is_integer_dtype(dtype):
+			row[col] = pd.NA
+		elif is_numeric_dtype(dtype):
+			row[col] = np.nan
+		else:
+			row[col] = ""
+
+	return pd.DataFrame([row], columns=df.columns)
 
 def to_excel_with_titles(dfs: list[pd.DataFrame], titles):
 	cleaned_dfs = []
@@ -394,39 +412,25 @@ def get_report_by_person(name: str, year: str):
 	total = yearly_total + previous_total
 
 	# PURCHASES REPORT FORMATTING
-	previous_year_row = pd.DataFrame([{col: "" for col in yearly_purchases_report.columns}])
+	previous_year_row = make_empty_row_like(yearly_purchases_report)
 	if "סכום" in previous_year_row.columns:
 		previous_year_row.at[0, "סכום"] = previous_total
-	if "מצוה" in previous_year_row.columns:
-		previous_year_row.at[0, "מצוה"] = ""
 	if "פרשה" in previous_year_row.columns:
 		previous_year_row.at[0, "פרשה"] = "יתרה משנה קודמת"
-	if "שנה" in previous_year_row.columns:
-		previous_year_row.at[0, "שנה"] = ""
 	if "תאריך" in previous_year_row.columns:
 		previous_year_row.at[0, "תאריך"] = pd.NaT
 	if "שם" in previous_year_row.columns:
 		previous_year_row.at[0, "שם"] = name
-	if "level" in previous_year_row.columns:
-		previous_year_row.at[0, "level"] = pd.NA
 
-	separation_row = pd.DataFrame([{col: "" for col in yearly_purchases_report.columns}])
-	if "סכום" in separation_row.columns:
-		separation_row.at[0, "סכום"] = pd.NA
-	if "תאריך" in separation_row.columns:
-		separation_row.at[0, "תאריך"] = pd.NaT
-	if "level" in separation_row.columns:
-		separation_row.at[0, "level"] = pd.NA
+	separation_row = make_empty_row_like(yearly_purchases_report)
 
-	sum_row = pd.DataFrame([{col: "" for col in yearly_purchases_report.columns}])
+	sum_row = make_empty_row_like(yearly_purchases_report)
 	if "סכום" in sum_row.columns:
 		sum_row.at[0, "סכום"] = previous_total + yearly_purchases_sum
 	if "פרשה" in sum_row.columns:
 		sum_row.at[0, "פרשה"] = 'סה"כ'
 	if "תאריך" in sum_row.columns:
 		sum_row.at[0, "תאריך"] = pd.NaT
-	if "level" in sum_row.columns:
-		sum_row.at[0, "level"] = pd.NA
 
 	yearly_purchases_report = pd.concat(
 		[previous_year_row, yearly_purchases_report, separation_row, sum_row],
@@ -439,13 +443,9 @@ def get_report_by_person(name: str, year: str):
 
 
 	# DONATIONS REPORT FORMATTING
-	separation_row = pd.DataFrame([{col: "" for col in yearly_donations_report.columns}])
-	if "סכום" in separation_row.columns:
-		separation_row.at[0, "סכום"] = pd.NA
-	if "תאריך" in separation_row.columns:
-		separation_row.at[0, "תאריך"] = pd.NaT
+	separation_row = make_empty_row_like(yearly_donations_report)
 
-	sum_row = pd.DataFrame([{col: "" for col in yearly_donations_report.columns}])
+	sum_row = make_empty_row_like(yearly_donations_report)
 	if "סכום" in sum_row.columns:
 		sum_row.at[0, "סכום"] = yearly_donations_sum
 	if "אופן תשלום" in sum_row.columns:
@@ -495,26 +495,17 @@ def get_report_by_day(year: str, day: str):
 
 	total = report["סכום"].sum()
 
-	separation_row = pd.DataFrame([{col: "" for col in report.columns}])
-	if "סכום" in separation_row.columns:
-		separation_row.at[0, "סכום"] = pd.NA
-	if "תאריך" in separation_row.columns:
-		separation_row.at[0, "תאריך"] = pd.NaT
-	if "level" in separation_row.columns:
-		separation_row.at[0, "level"] = pd.NA
+	separation_row = make_empty_row_like(report)
 
-	total_row = pd.DataFrame([{col: "" for col in report.columns}])
+	total_row = make_empty_row_like(report)
 	if "סכום" in total_row.columns:
 		total_row.at[0, "סכום"] = total
 	if "פרשה" in total_row.columns:
 		total_row.at[0, "פרשה"] = 'סה"כ'
 	if "תאריך" in total_row.columns:
 		total_row.at[0, "תאריך"] = pd.NaT
-	if "level" in total_row.columns:
-		total_row.at[0, "level"] = pd.NA
 
 	report = pd.concat([report, separation_row, total_row], ignore_index=True)
-
 	columns = report.columns
 	reordered_columns = ["הערות"] + [col for col in columns if col != "הערות"]
 	report = report[reordered_columns]
@@ -545,11 +536,11 @@ def get_general_report():
 			reg_debts.append(balance)
 
 	regulars_report = {
-		"סכום": reg_debts + [pd.NA, total_owed_reg],
+		"סכום": reg_debts + [np.nan, total_owed_reg],
 		"שם": reg_names + ["", "סך הכל"],
 	}
 	guests_report = {
-		"סכום": gue_debts + [pd.NA, total_owed_gue],
+		"סכום": gue_debts + [np.nan, total_owed_gue],
 		"שם": gue_names + ["", "סך הכל"],
 	}
 	regulars_report = pd.DataFrame(regulars_report)
