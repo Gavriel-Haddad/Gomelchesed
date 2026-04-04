@@ -194,6 +194,13 @@ def to_pdf_reportlab(dfs, titles):
 		reshaped = arabic_reshaper.reshape(text)
 		return get_display(reshaped)
 
+	def pdf_cell(value):
+		if pd.isna(value):
+			return ""
+		if isinstance(value, pd.Timestamp):
+			return value.strftime("%d/%m/%Y")
+		return str(value)
+
 	# Register a Hebrew-supporting font
 	font_path = os.path.join(os.path.dirname(__file__), "fonts", "DejaVuSans.ttf")
 	pdfmetrics.registerFont(TTFont("DejaVu", font_path))
@@ -225,16 +232,16 @@ def to_pdf_reportlab(dfs, titles):
 
 	# Add tables and titles
 	for df, title in zip(dfs, titles):
-		df.fillna("", inplace=True)
+		df_for_pdf = df.copy()
 
 		elements.append(Spacer(1, 36))
-		elements.append(Paragraph(reshape_hebrew(title), hebrew_style))
+		elements.append(Paragraph(reshape_hebrew(str(title)), hebrew_style))
 		elements.append(Spacer(1, 12))
 
 		# Convert dataframe to list of lists (header + rows)
-		data = [[reshape_hebrew(str(col)) for col in df.columns]]
-		for _, row in df.iterrows():
-			reshaped_row = [reshape_hebrew(str(cell)) for cell in row]
+		data = [[reshape_hebrew(str(col)) for col in df_for_pdf.columns]]
+		for _, row in df_for_pdf.iterrows():
+			reshaped_row = [reshape_hebrew(pdf_cell(cell)) for cell in row]
 			data.append(reshaped_row)
 
 		table = Table(data)
@@ -253,14 +260,12 @@ def to_pdf_reportlab(dfs, titles):
 	def add_bsd(canvas, doc):
 		canvas.setFont("DejaVu", 12)
 		bsd_text = reshape_hebrew('בס"ד')
-		canvas.drawRightString(560, 820, bsd_text)  # adjust as needed
+		canvas.drawRightString(560, 820, bsd_text)
 
-	# Build document with בס"ד
 	doc.build(elements, onFirstPage=add_bsd, onLaterPages=add_bsd)
 
 	buffer.seek(0)
 	return buffer
-
 
 
 def handle_reciepts():
