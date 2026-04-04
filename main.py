@@ -481,9 +481,6 @@ def get_report_by_person(name: str, year: str):
 	# GENERAL REPORT FORMATTING
 	general_report = pd.DataFrame([{
 		"סכום": total,
-		"שם": "",
-		"שנה": "",
-		"תאריך": datetime.today()
 	}])
 
 
@@ -628,7 +625,6 @@ try:
 				donations_report, purchases_report, general_report = get_report_by_person(name, year)
 				purchases_report.drop(["שנה", "שם", "level"], axis=1, inplace=True)
 				donations_report.drop(["שנה", "שם"], axis=1, inplace=True)
-				general_report.drop(["שנה", "שם"], axis=1, inplace=True)
 				
 
 				st.write("חובות")
