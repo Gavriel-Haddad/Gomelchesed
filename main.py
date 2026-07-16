@@ -495,9 +495,7 @@ def get_report_by_day(year: str, day: str):
 	report = year_data[year_data["פרשה"] == day]
 
 	if report.empty:
-        report = year_data[
-            year_data["פרשה"].str.contains(day, case=False, na=False)
-        ]	
+		report = year_data[year_data["פרשה"].str.contains(day)]	
 	
 	
 	report = report.sort_values(by=["תאריך", "level"])
