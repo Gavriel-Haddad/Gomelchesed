@@ -490,7 +490,16 @@ def get_report_by_person(name: str, year: str):
 	return (yearly_donations_report, yearly_purchases_report, general_report)
 
 def get_report_by_day(year: str, day: str):
-	report = pd.DataFrame(st.session_state["PURCHASES"][(st.session_state["PURCHASES"]["שנה"] == year) & (st.session_state["PURCHASES"]["פרשה"].str.contains(day))])
+	purchases = st.session_state["PURCHASES"]
+	year_data = purchases[purchases["שנה"] == year]
+	report = year_data[year_data["פרשה"] == day]
+
+	if report.empty:
+        report = year_data[
+            year_data["פרשה"].str.contains(day, case=False, na=False)
+        ]	
+	
+	
 	report = report.sort_values(by=["תאריך", "level"])
 
 	display_day = sorted(report["פרשה"].tolist(), key=len)[0]
