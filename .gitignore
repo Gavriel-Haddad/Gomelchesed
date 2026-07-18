@@ -1,2 +1,3 @@
 git PAT.txt
 .streamlit/
+__pycache__/
